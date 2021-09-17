@@ -60,4 +60,18 @@ class ProductRepository extends AbstractRepository
 
         return $this->paginator($users->getQuery(), $page, $offset, $hydrationMode);
     }
+
+
+    /**
+     * @param array $productIds
+     * @param string|int $hydrationMode
+     * @return array
+     */
+    public function fetchProductsByIds(array $productIds, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
+    {
+        return $this->commonJoin()
+            ->where('p.id in (' . implode(',', $productIds) . ')')
+            ->getQuery()
+            ->getResult($hydrationMode);
+    }
 }

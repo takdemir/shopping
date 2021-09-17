@@ -16,6 +16,7 @@
         "nelmio/api-doc-bundle": "^4.6",
         "nelmio/cors-bundle": "^2.1",
         "phpdocumentor/reflection-docblock": "^5.2",
+        "predis/predis": "^1.1",
         "sensio/framework-extra-bundle": "^6.1",
         "symfony/asset": "5.3.*",
         "symfony/console": "5.3.*",
