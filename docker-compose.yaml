@@ -1,0 +1,67 @@
+version: "3"
+
+networks:
+  shopping:
+
+services:
+  #NginX
+  shopping_nginx_service:
+    image: nginx:stable-alpine
+    container_name: shopping_nginx_service
+    ports:
+      - "9041:80"
+    volumes:
+      - ./:/var/www/html
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - shopping_php_service
+      - shopping_mysql_service
+    networks:
+      - shopping
+
+  #PHP
+  shopping_php_service:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: shopping_php_service
+    working_dir: /var/www/html
+    restart: on-failure
+    networks:
+      - shopping
+    ports:
+      - "9042:9000"
+    volumes:
+      - ./:/var/www/html
+
+  #MySQL
+  shopping_mysql_service:
+    image: mysql:5.7
+    container_name: shopping_mysql_service
+    ports:
+      - "9043:3306"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Shopping123*
+    networks:
+      - shopping
+    volumes:
+      - shopping_mysql:/var/lib/mysql
+
+  #REDIS
+  shopping_redis_service:
+    image: redis
+    container_name: shopping_redis_service
+    ports:
+      - "9044:6379"
+    restart: always
+    networks:
+      - shopping
+    volumes:
+      - shopping_redis:/data
+
+volumes:
+  shopping_mysql:
+    driver: local
+  shopping_redis:
+    driver: local
