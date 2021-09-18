@@ -23,7 +23,7 @@ class BasketController extends BaseController
     use BaseTrait;
 
     /**
-     * @Route("/add", name="add", methods={"POST"})
+     * @Route("", name="add", methods={"POST"})
      * @throws InvalidArgumentException
      * @OA\Response (
      *     response="200",
@@ -146,14 +146,14 @@ class BasketController extends BaseController
                         $alreadyAddedProducts[] = $basketItem['product'];
                         $cachedItem['quantity'] = $newQuantity;
                         // Unit price may be changed. So I get the unitPrice again from $product.
-                        $cachedItem['total'] = number_format($cachedItem['quantity'] * $product['price'], 2);
+                        $cachedItem['total'] = number_format($cachedItem['quantity'] * $product['price'], 2, '.', '');
                         $itemsWillBeCached[] = $cachedItem;
                     }
                 }
             }
         }
-        $itemsWillBeCached = array_merge($itemsWillBeCached, $this->setItemsWillBeCached($basketItems, $alreadyAddedProducts, $rePreparedProducts));
-
+        $newCachedItems = array_merge($itemsWillBeCached, $this->setItemsWillBeCached($basketItems, $alreadyAddedProducts, $rePreparedProducts));
+        $basketTotal = $this->calculateBasketTotal($newCachedItems);
         $message = "success";
         if ($noStockProducts) {
             $message = 'No more stock for ' . implode(',', $noStockProducts) . '. So I couldn\'t increase their quantities.';
@@ -163,15 +163,15 @@ class BasketController extends BaseController
         if (!$cacheDropResult) {
             return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while dropping the cache']));
         }
-        $cacheAddResult = $this->cacheUtil->add($cacheKey, $itemsWillBeCached);
+        $cacheAddResult = $this->cacheUtil->add($cacheKey, $newCachedItems);
         if (!$cacheAddResult) {
             return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while adding to basket cache']));
         }
-        return $this->json(ReplyUtils::success(['data' => $itemsWillBeCached, 'message' => $message]));
+        return $this->json(ReplyUtils::success(['data' => $newCachedItems, 'basketTotal' => $basketTotal, 'message' => $message]));
     }
 
     /**
-     * @Route("/remove", name="remove", methods={"GET"})
+     * @Route("/remove", name="remove", methods={"DELETE"})
      * @throws InvalidArgumentException
      * @OA\Response (
      *     response="200",
@@ -221,7 +221,40 @@ class BasketController extends BaseController
         if (!$cacheAddResult) {
             return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while adding to basket cache']));
         }
-        return $this->json(ReplyUtils::success(['data' => $newBasketItems, 'message' => 'success']));
+        $basketTotal = $this->calculateBasketTotal($newBasketItems);
+        return $this->json(ReplyUtils::success(['data' => $newBasketItems, 'basketTotal' => $basketTotal, 'message' => 'success']));
+    }
+
+
+    /**
+     * @Route("", name="empty", methods={"DELETE"})
+     * @throws InvalidArgumentException
+     * @OA\Response (
+     *     response="200",
+     *     description="Remove all items from basket",
+     *     @OA\JsonContent(
+     *           @OA\Property(property="status", type="boolean"),
+     *           @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *           @OA\Property(property="message", type="string"),
+     *        )
+     * ),
+     * @OA\Tag(name="Basket")
+     * @AnnotationSecurity(name="Authorization")
+     */
+    public function empty(Request $request): JsonResponse
+    {
+        if (!$this->checkContentType($request->headers->get('content-type'))) {
+            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+        }
+        if (!$user = $this->getUser()) {
+            return $this->json(ReplyUtils::failure(['message' => 'No user found!']), 403);
+        }
+        $cacheKey = md5($user->getUserIdentifier());
+        $cacheDropResult = $this->cacheUtil->drop($cacheKey);
+        if (!$cacheDropResult) {
+            return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while dropping the cache']));
+        }
+        return $this->json(ReplyUtils::success(['message' => 'success']));
     }
 
 
@@ -252,7 +285,8 @@ class BasketController extends BaseController
 
         $cacheKey = md5($user->getUserIdentifier());
         $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
-        return $this->json(ReplyUtils::success(['data' => $fetchBasketFromCache, 'message' => 'success']));
+        $basketTotal = $this->calculateBasketTotal($fetchBasketFromCache);
+        return $this->json(ReplyUtils::success(['data' => $fetchBasketFromCache, 'basketTotal' => $basketTotal, 'message' => 'success']));
     }
 
     /**
@@ -281,5 +315,19 @@ class BasketController extends BaseController
         }
 
         return $itemsWillBeCached;
+    }
+
+
+    /**
+     * @param array $newCachedItems
+     * @return string
+     */
+    private function calculateBasketTotal(array $newCachedItems): string
+    {
+        $total = 0;
+        foreach ($newCachedItems as $item) {
+            $total += $item['total'];
+        }
+        return number_format($total, 2, '.', '');
     }
 }

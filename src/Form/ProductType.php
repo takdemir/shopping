@@ -81,7 +81,7 @@ class ProductType extends AbstractType
 
         $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $event) {
             $product = $event->getData();
-            $product->setPrice(number_format($product->getPrice(), 2));
+            $product->setPrice(number_format($product->getPrice(), 2, '.', ''));
         });
     }
 
