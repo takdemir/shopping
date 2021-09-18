@@ -36,10 +36,16 @@ class Category
      */
     private $products;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Discount::class, mappedBy="category")
+     */
+    private $discounts;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
         $this->products = new ArrayCollection();
+        $this->discounts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -95,6 +101,36 @@ class Category
             // set the owning side to null (unless already changed)
             if ($product->getCategory() === $this) {
                 $product->setCategory(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Discount[]
+     */
+    public function getDiscounts(): Collection
+    {
+        return $this->discounts;
+    }
+
+    public function addDiscount(Discount $discount): self
+    {
+        if (!$this->discounts->contains($discount)) {
+            $this->discounts[] = $discount;
+            $discount->setCategory($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDiscount(Discount $discount): self
+    {
+        if ($this->discounts->removeElement($discount)) {
+            // set the owning side to null (unless already changed)
+            if ($discount->getCategory() === $this) {
+                $discount->setCategory(null);
             }
         }
 

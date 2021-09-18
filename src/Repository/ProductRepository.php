@@ -37,28 +37,28 @@ class ProductRepository extends AbstractRepository
      */
     public function search(array $searchParameters, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
     {
-        $users = $this->commonJoin()->where('p.id is not null');
+        $products = $this->commonJoin()->where('p.id is not null');
 
         if ($searchParameters['category']) {
-            $users->andWhere('category.id=:categoryId')->setParameter('categoryId', $searchParameters['category']);
+            $products->andWhere('category.id=:categoryId')->setParameter('categoryId', $searchParameters['category']);
         }
 
         if ($searchParameters['isCategoryActive']) {
-            $users->andWhere('category.isActive=:categoryActive')->setParameter('categoryActive', $searchParameters['isCategoryActive']);
+            $products->andWhere('category.isActive=:categoryActive')->setParameter('categoryActive', $searchParameters['isCategoryActive']);
         }
 
         if ($searchParameters['name']) {
-            $users->andWhere('p.name like "%' . $searchParameters['name'] . '%"');
+            $products->andWhere('p.name like "%' . $searchParameters['name'] . '%"');
         }
 
         if (is_bool($searchParameters['isActive'])) {
-            $users->andWhere('p.isActive=:isActive')->setParameter('isActive', $searchParameters['isActive']);
+            $products->andWhere('p.isActive=:isActive')->setParameter('isActive', $searchParameters['isActive']);
         }
 
         $page = (int)$searchParameters['page'];
         $offset = (int)$searchParameters['offset'];
 
-        return $this->paginator($users->getQuery(), $page, $offset, $hydrationMode);
+        return $this->paginator($products->getQuery(), $page, $offset, $hydrationMode);
     }
 
 

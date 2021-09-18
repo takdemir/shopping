@@ -35,20 +35,20 @@ class CategoryRepository extends AbstractRepository
      */
     public function search(array $searchParameters, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
     {
-        $users = $this->commonJoin()->where('p.id is not null');
+        $categories = $this->commonJoin()->where('p.id is not null');
 
         if ($searchParameters['name']) {
-            $users->andWhere('p.name like "%' . $searchParameters['name'] . '%"');
+            $categories->andWhere('p.name like "%' . $searchParameters['name'] . '%"');
         }
 
         if (is_bool($searchParameters['isActive'])) {
-            $users->andWhere('p.isActive=:isActive')->setParameter('isActive', $searchParameters['isActive']);
+            $categories->andWhere('p.isActive=:isActive')->setParameter('isActive', $searchParameters['isActive']);
         }
 
         $page = (int)$searchParameters['page'];
         $offset = (int)$searchParameters['offset'];
 
-        return $this->paginator($users->getQuery(), $page, $offset, $hydrationMode);
+        return $this->paginator($categories->getQuery(), $page, $offset, $hydrationMode);
     }
 
 }

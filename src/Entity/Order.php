@@ -42,10 +42,16 @@ class Order implements \JsonSerializable
      */
     private bool $isActive = true;
 
+    /**
+     * @ORM\OneToMany(targetEntity=OrderDiscount::class, mappedBy="orderId")
+     */
+    private $orderDiscounts;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
         $this->orderItems = new ArrayCollection();
+        $this->orderDiscounts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -158,5 +164,35 @@ class Order implements \JsonSerializable
             ],
             'orderItems' => $preparedOrderItems
         ];
+    }
+
+    /**
+     * @return Collection|OrderDiscount[]
+     */
+    public function getOrderDiscounts(): Collection
+    {
+        return $this->orderDiscounts;
+    }
+
+    public function addOrderDiscount(OrderDiscount $orderDiscount): self
+    {
+        if (!$this->orderDiscounts->contains($orderDiscount)) {
+            $this->orderDiscounts[] = $orderDiscount;
+            $orderDiscount->setOrderId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrderDiscount(OrderDiscount $orderDiscount): self
+    {
+        if ($this->orderDiscounts->removeElement($orderDiscount)) {
+            // set the owning side to null (unless already changed)
+            if ($orderDiscount->getOrderId() === $this) {
+                $orderDiscount->setOrderId(null);
+            }
+        }
+
+        return $this;
     }
 }

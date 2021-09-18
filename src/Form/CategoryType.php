@@ -27,7 +27,7 @@ class CategoryType extends AbstractType
                         null,
                         null,
                         null,
-                        'Name must be 5 characters at least',
+                        'Name must be 2 characters at least',
                         'Name can be 255 characters max.')
                 ]
             ])
