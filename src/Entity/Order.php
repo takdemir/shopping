@@ -33,7 +33,7 @@ class Order
     private float $total;
 
     /**
-     * @ORM\OneToMany(targetEntity=OrderItem::class, mappedBy="orderId", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=OrderItem::class, mappedBy="orderId", orphanRemoval=true, cascade={"all"})
      */
     private $orderItems;
 

@@ -3,8 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Order;
+use App\Entity\OrderItem;
+use App\Entity\Product;
+use App\Entity\User;
 use App\Form\OrderType;
 use App\Util\ReplyUtils;
+use Psr\Cache\InvalidArgumentException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -210,7 +214,27 @@ class OrderController extends BaseController
             }
 
             $cacheKey = md5($user->getUserIdentifier());
-
+            $fetchBasketItems = $this->cacheUtil->fetch($cacheKey);
+            if (!$fetchBasketItems) {
+                return $this->json(ReplyUtils::failure(['message' => 'No items in the basket!']));
+            }
+            $userRepository = $this->em->getRepository(User::class);
+            $productRepository = $this->em->getRepository(Product::class);
+            $total = 0;
+            foreach ($fetchBasketItems as $item) {
+                $orderItem = new OrderItem();
+                $orderItem->setIsActive(true);
+                $orderItem->setOrderId($order);
+                $orderItem->setProduct($productRepository->find($item['productId']));
+                $orderItem->setQuantity($item['quantity']);
+                $orderItem->setUnitPrice($item['unitPrice']);
+                $orderItem->setTotal($item['total']);
+                $total += $item['total'];
+                $order->addOrderItem($orderItem);
+            }
+            $order->setTotal($total);
+            $order->setUser($userRepository->find($user->getId()));
+            $order->setIsActive(true);
             $this->em->persist($order);
             $this->em->flush();
 
@@ -218,9 +242,11 @@ class OrderController extends BaseController
                 return $this->json(ReplyUtils::failure(['message' => 'Creation is failed']));
             }
 
+            $this->cacheUtil->drop($cacheKey);
+
             return $this->json(ReplyUtils::success(['data' => $order->getId(), 'message' => 'success']));
 
-        } catch (\Exception $exception) {
+        } catch (InvalidArgumentException | \Exception $exception) {
             //TODO: Log
             return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
         }

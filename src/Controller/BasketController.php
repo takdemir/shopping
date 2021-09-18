@@ -153,7 +153,10 @@ class BasketController extends BaseController
             }
         }
         $newCachedItems = array_merge($itemsWillBeCached, $this->setItemsWillBeCached($basketItems, $alreadyAddedProducts, $rePreparedProducts));
-        $basketTotal = $this->calculateBasketTotal($newCachedItems);
+        $basketTotal = 0;
+        if ($newCachedItems) {
+            $basketTotal = $this->calculateBasketTotal($newCachedItems);
+        }
         $message = "success";
         if ($noStockProducts) {
             $message = 'No more stock for ' . implode(',', $noStockProducts) . '. So I couldn\'t increase their quantities.';
@@ -221,7 +224,10 @@ class BasketController extends BaseController
         if (!$cacheAddResult) {
             return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while adding to basket cache']));
         }
-        $basketTotal = $this->calculateBasketTotal($newBasketItems);
+        $basketTotal = 0;
+        if ($newBasketItems) {
+            $basketTotal = $this->calculateBasketTotal($newBasketItems);
+        }
         return $this->json(ReplyUtils::success(['data' => $newBasketItems, 'basketTotal' => $basketTotal, 'message' => 'success']));
     }
 
@@ -285,7 +291,10 @@ class BasketController extends BaseController
 
         $cacheKey = md5($user->getUserIdentifier());
         $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
-        $basketTotal = $this->calculateBasketTotal($fetchBasketFromCache);
+        $basketTotal = 0;
+        if ($fetchBasketFromCache) {
+            $basketTotal = $this->calculateBasketTotal($fetchBasketFromCache);
+        }
         return $this->json(ReplyUtils::success(['data' => $fetchBasketFromCache, 'basketTotal' => $basketTotal, 'message' => 'success']));
     }
 
