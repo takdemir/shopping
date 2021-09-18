@@ -229,15 +229,16 @@ class OrderController extends BaseController
 
             $cacheKey = md5($user->getUserIdentifier());
             $fetchBasketItems = $this->cacheUtil->fetch($cacheKey);
-            if (!$fetchBasketItems) {
+            if (!$fetchBasketItems || !array_key_exists('items', $fetchBasketItems)) {
                 return $this->json(ReplyUtils::failure(['message' => 'No items in the basket!']));
             }
+            $items = $fetchBasketItems['items'];
             $userRepository = $this->em->getRepository(User::class);
             $productRepository = $this->em->getRepository(Product::class);
 
             // Let's check the basket stock again. Because stock of products may decrease after cached the items
             $productIds = [];
-            foreach ($fetchBasketItems as $item) {
+            foreach ($items as $item) {
                 $productIds[] = $item['productId'];
             }
             //Fetch all products in basket at the same time not to get them from repo one by one
@@ -253,7 +254,7 @@ class OrderController extends BaseController
             }
 
             $total = 0;
-            foreach ($fetchBasketItems as $item) {
+            foreach ($items as $item) {
                 $product = $rePreparedProducts[$item['productId']];
                 if ($item['quantity'] > $product->getStock()) {
                     return $this->json(ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $product['name'])]));
