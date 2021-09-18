@@ -94,6 +94,10 @@ class UserRepository extends AbstractRepository implements PasswordUpgraderInter
     {
         $users = $this->commonJoin()->where('p.id is not null');
 
+        if ($searchParameters['user']) {
+            $users->andWhere('p.id=:id')->setParameter('id', $searchParameters['user']);
+        }
+
         if ($searchParameters['name']) {
             $users->andWhere('p.name like "%' . $searchParameters['name'] . '%"');
         }

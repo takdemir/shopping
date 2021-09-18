@@ -64,6 +64,15 @@ class UserController extends BaseController
 
         $query = $request->query->all();
 
+        if (($checkAuthorisation = $this->checkUserAuthorisation()) && !$checkAuthorisation['status']) {
+            return $this->json($checkAuthorisation, 403);
+        }
+
+        $user = null;
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $user = $this->getUser()->getId();
+        }
+
         $name = null;
         if (array_key_exists('name', $query) && !trim($query['name'])) {
             $name = trim($query['name']);
@@ -90,6 +99,7 @@ class UserController extends BaseController
         }
 
         $parameters = [
+            'user' => $user,
             'name' => $name,
             'email' => $email,
             'isActive' => $isActive,
@@ -121,6 +131,10 @@ class UserController extends BaseController
     {
         if (!$this->checkContentType($request->headers->get('content-type'))) {
             return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+        }
+
+        if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
+            return $this->json($checkAuthorisation, 403);
         }
 
         return $this->json(ReplyUtils::success(['data' => $user, 'message' => 'success']));
@@ -268,6 +282,10 @@ class UserController extends BaseController
         try {
             if (!$this->checkContentType($request->headers->get('content-type'))) {
                 return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+            }
+
+            if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
+                return $this->json($checkAuthorisation, 403);
             }
 
             $postedData = json_decode($request->getContent(), true);

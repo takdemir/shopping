@@ -68,6 +68,14 @@ class OrderController extends BaseController
             $user = (int)$query['customer'];
         }
 
+        if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
+            return $this->json($checkAuthorisation, 403);
+        }
+
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $user = $this->getUser()->getId();
+        }
+
         $page = 1;
         if (array_key_exists('page', $query) && is_int((int)$query['page'])) {
             $page = (int)$query['page'];
@@ -111,6 +119,10 @@ class OrderController extends BaseController
             return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
         }
 
+        if (($checkAuthorisation = $this->checkUserAuthorisation($order->getUser()->getId())) && !$checkAuthorisation['status']) {
+            return $this->json($checkAuthorisation, 403);
+        }
+
         return $this->json(ReplyUtils::success(['data' => $order, 'message' => 'success']));
     }
 
@@ -135,7 +147,9 @@ class OrderController extends BaseController
         if (!$this->checkContentType($request->headers->get('content-type'))) {
             return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
         }
-
+        if (($checkAuthorisation = $this->checkUserAuthorisation($order->getUser()->getId())) && !$checkAuthorisation['status']) {
+            return $this->json($checkAuthorisation, 403);
+        }
         $order->setIsActive(false);
         $this->em->persist($order);
         $this->em->flush($order);
