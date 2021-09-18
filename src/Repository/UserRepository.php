@@ -53,7 +53,7 @@ class UserRepository extends AbstractRepository implements PasswordUpgraderInter
     private function commonJoin(): QueryBuilder
     {
         return $this->createQueryBuilder('p')
-            ->select('PARTIAL p.{id, email, name, isActive, roles}');
+            ->select('PARTIAL p.{id, email, name, isActive, roles, createdAt}');
     }
 
     /**
@@ -114,5 +114,109 @@ class UserRepository extends AbstractRepository implements PasswordUpgraderInter
         $offset = (int)$searchParameters['offset'];
 
         return $this->paginator($users->getQuery(), $page, $offset, $hydrationMode);
+    }
+
+
+    /**
+     * @param int|null $userId
+     * @param bool|null $activeOrders
+     * @param string|int $hydrationMode
+     * @return array
+     * @throws NonUniqueResultException
+     */
+    public function fetchCustomerOrdersByCustomerId(?int $userId, ?bool $activeOrders = null, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
+    {
+        $userOrders = $this->createQueryBuilder('p')
+            ->select('PARTIAL p.{id, email, name, isActive, roles, createdAt}')
+            ->addSelect('orders')
+            ->innerJoin('p.orders', 'orders')->where('p.id is not null');
+        if (!is_null($userId)) {
+            $userOrders->andWhere('p.id=:userId')->setParameter('userId', $userId);
+        }
+
+        if (!is_null($activeOrders)) {
+            $userOrders->andWhere('orders.isActive=:isActive')->setParameter('isActive', $activeOrders);
+        }
+        return $userOrders->getQuery()
+            ->getOneOrNullResult($hydrationMode);
+    }
+
+
+    /**
+     * @param int $userId
+     * @param bool|null $activeOrders
+     * @param string|int $hydrationMode
+     * @return array
+     * @throws NonUniqueResultException
+     */
+    public function fetchCustomerOrdersRevenueByCustomerId(int $userId, ?bool $activeOrders = null, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
+    {
+        $userOrders = $this->createQueryBuilder('p')
+            ->select('PARTIAL p.{id, email, name, isActive, roles, createdAt}')
+            ->addSelect('orders')
+            ->innerJoin('p.orders', 'orders')
+            ->where('p.id=:userId')->setParameter('userId', $userId);
+
+        if (!is_null($activeOrders)) {
+            $userOrders->andWhere('orders.isActive=:isActive')->setParameter('isActive', $activeOrders);
+        }
+        $userOrders = $userOrders->getQuery()
+            ->getOneOrNullResult($hydrationMode);
+        $result = [
+            'id' => $userOrders['id'],
+            'email' => $userOrders['email'],
+            'name' => $userOrders['name'],
+            'since' => $userOrders['createdAt']->format('Y-m-d'),
+        ];
+        $revenue = 0;
+        if ($userOrders['orders']) {
+            foreach ($userOrders['orders'] as $order) {
+                $revenue += $order['total'];
+            }
+        }
+        $result['revenue'] = $revenue;
+        return $result;
+    }
+
+
+    /**
+     * @param int|null $userId
+     * @param bool|null $activeOrders
+     * @param string|int $hydrationMode
+     * @return array
+     */
+    public function fetchCustomerOrdersRevenues(?int $userId, bool $activeOrders = null, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
+    {
+        $userOrders = $this->createQueryBuilder('p')
+            ->select('PARTIAL p.{id, email, name, isActive, roles, createdAt}')
+            ->addSelect('orders')
+            ->innerJoin('p.orders', 'orders')
+            ->where('p.id is not null');
+        if (!is_null($userId)) {
+            $userOrders->andWhere('p.id=:userId')->setParameter('userId', $userId);
+        }
+        if (!is_null($activeOrders)) {
+            $userOrders->andWhere('orders.isActive=:isActive')->setParameter('isActive', $activeOrders);
+        }
+        $userOrders = $userOrders->getQuery()
+            ->getResult($hydrationMode);
+        $result = [];
+        foreach ($userOrders as $userOrder) {
+            $sub = [
+                'id' => $userOrder['id'],
+                'email' => $userOrder['email'],
+                'name' => $userOrder['name'],
+                'since' => $userOrder['createdAt']->format('Y-m-d'),
+            ];
+            $revenue = 0;
+            if ($userOrder['orders']) {
+                foreach ($userOrder['orders'] as $order) {
+                    $revenue += $order['total'];
+                }
+            }
+            $sub['revenue'] = $revenue;
+            $result[] = $sub;
+        }
+        return $result;
     }
 }

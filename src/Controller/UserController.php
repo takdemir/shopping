@@ -315,4 +315,156 @@ class UserController extends BaseController
             return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
         }
     }
+
+    /**
+     * @param Request $request
+     * @param int $userId
+     * @return JsonResponse|void
+     * @Route("/orders/{userId<^\d+$>}", name="fetch_user_orders", methods={"GET"})
+     * @OA\Response (
+     *     response="200",
+     *     description="Fetchs an user orders",
+     *     @OA\JsonContent(
+     *           @OA\Property(property="status", type="boolean"),
+     *           @OA\Property(property="data", type="object"),
+     *           @OA\Property(property="message", type="string"),
+     *        )
+     * )
+     * @OA\Tag(name="User")
+     * @AnnotationSecurity(name="Authorization")
+     */
+    public function fetchUserOrders(Request $request, int $userId): JsonResponse
+    {
+        try {
+            if (!$this->checkContentType($request->headers->get('content-type'))) {
+                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+            }
+
+            if (($checkAuthorisation = $this->checkUserAuthorisation($userId)) && !$checkAuthorisation['status']) {
+                return $this->json($checkAuthorisation, 403);
+            }
+
+            $userOrders = $this->userRepository->fetchCustomerOrdersByCustomerId($userId, true);
+
+            return $this->json(ReplyUtils::success(['data' => $userOrders, 'message' => 'success']));
+
+        } catch (\Exception $exception) {
+            //TODO: Log
+            return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param int $userId
+     * @return JsonResponse|void
+     * @Route("/revenue/{userId<^\d+$>}", name="fetch_user_orders_revenue", methods={"GET"})
+     * @OA\Response (
+     *     response="200",
+     *     description="Fetchs an user orders revenue",
+     *     @OA\JsonContent(
+     *           @OA\Property(property="status", type="boolean"),
+     *           @OA\Property(property="data", type="object"),
+     *           @OA\Property(property="message", type="string"),
+     *        )
+     * )
+     * @OA\Tag(name="User")
+     * @AnnotationSecurity(name="Authorization")
+     */
+    public function fetchUserOrdersRevenue(Request $request, int $userId): JsonResponse
+    {
+        try {
+            if (!$this->checkContentType($request->headers->get('content-type'))) {
+                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+            }
+
+            if (($checkAuthorisation = $this->checkUserAuthorisation($userId)) && !$checkAuthorisation['status']) {
+                return $this->json($checkAuthorisation, 403);
+            }
+
+            $userOrdersRevenue = $this->userRepository->fetchCustomerOrdersRevenueByCustomerId($userId, true);
+
+            return $this->json(ReplyUtils::success(['data' => $userOrdersRevenue, 'message' => 'success']));
+
+        } catch (\Exception $exception) {
+            //TODO: Log
+            return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse|void
+     * @Route("/orders", name="fetch_users_orders", methods={"GET"})
+     * @OA\Response (
+     *     response="200",
+     *     description="Fetchs all users orders",
+     *     @OA\JsonContent(
+     *           @OA\Property(property="status", type="boolean"),
+     *           @OA\Property(property="data", type="object"),
+     *           @OA\Property(property="message", type="string"),
+     *        )
+     * )
+     * @OA\Tag(name="User")
+     * @AnnotationSecurity(name="Authorization")
+     */
+    public function fetchUsersOrders(Request $request): JsonResponse
+    {
+        try {
+            if (!$this->checkContentType($request->headers->get('content-type'))) {
+                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+            }
+
+            $userId = $this->getUser()->getId();
+            if ($this->isGranted('ROLE_ADMIN')) {
+                $userId = null;
+            }
+
+            $userOrders = $this->userRepository->fetchCustomerOrdersByCustomerId($userId, true);
+
+            return $this->json(ReplyUtils::success(['data' => $userOrders, 'message' => 'success']));
+
+        } catch (\Exception $exception) {
+            //TODO: Log
+            return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse|void
+     * @Route("/revenues", name="fetch_users_orders_revenue", methods={"GET"})
+     * @OA\Response (
+     *     response="200",
+     *     description="Fetchs all users orders revenue",
+     *     @OA\JsonContent(
+     *           @OA\Property(property="status", type="boolean"),
+     *           @OA\Property(property="data", type="object"),
+     *           @OA\Property(property="message", type="string"),
+     *        )
+     * )
+     * @OA\Tag(name="User")
+     * @AnnotationSecurity(name="Authorization")
+     */
+    public function fetchUsersOrdersRevenue(Request $request): JsonResponse
+    {
+        try {
+            if (!$this->checkContentType($request->headers->get('content-type'))) {
+                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+            }
+
+            $userId = $this->getUser()->getId();
+            if ($this->isGranted('ROLE_ADMIN')) {
+                $userId = null;
+            }
+
+            $userOrdersRevenue = $this->userRepository->fetchCustomerOrdersRevenues($userId, true);
+
+            return $this->json(ReplyUtils::success(['data' => $userOrdersRevenue, 'message' => 'success']));
+
+        } catch (\Exception $exception) {
+            //TODO: Log
+            return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
+        }
+    }
 }
