@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity(repositoryClass=DiscountRepository::class)
  */
-class Discount
+class Discount implements \JsonSerializable
 {
     use CreatedAtTrait;
     use StartAtTrait;
@@ -139,5 +139,36 @@ class Discount
         $this->isActive = $isActive;
 
         return $this;
+    }
+
+    public function jsonSerialize(): array
+    {
+        $user = $this->getUser();
+        $category = $this->getCategory();
+        $product = $this->getProduct();
+        return [
+            'id' => $this->getId(),
+            'discountCode' => $this->getDiscountCode(),
+            'discountClassName' => $this->getDiscountClassName(),
+            'isActive' => $this->getIsActive(),
+            'createdAt' => $this->getCreatedAt() ? $this->getCreatedAt()->format('Y-m-d H:i:s') : null,
+            'startAt' => $this->getStartAt() ? $this->getStartAt()->format('Y-m-d H:i:s') : null,
+            'expireAt' => $this->getExpireAt() ? $this->getExpireAt()->format('Y-m-d H:i:s') : null,
+            'user' => $user ? [
+                'id' => $user->getId(),
+                'name' => $user->getName(),
+            ] : null,
+            'category' => $category ? [
+                'id' => $category->getId(),
+                'name' => $category->getName(),
+                'isActive' => $category->getIsActive(),
+            ] : null,
+            'product' => $product ? [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'isActive' => $product->getIsActive()
+            ] : null,
+
+        ];
     }
 }
