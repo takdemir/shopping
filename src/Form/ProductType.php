@@ -13,6 +13,8 @@ use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\Length;
@@ -75,6 +77,12 @@ class ProductType extends AbstractType
                 'choice_label' => 'name',
                 'invalid_message' => 'Category is not valid'
             ]);
+
+
+        $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $event) {
+            $product = $event->getData();
+            $product->setPrice(number_format($product->getPrice(), 2));
+        });
     }
 
     public function configureOptions(OptionsResolver $resolver): void

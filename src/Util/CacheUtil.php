@@ -5,7 +5,7 @@ namespace App\Util;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Psr\Cache\InvalidArgumentException;
 
-class Basket
+final class CacheUtil
 {
     private AdapterInterface $cache;
 
@@ -20,7 +20,7 @@ class Basket
      * @return bool
      * @throws InvalidArgumentException
      */
-    public function addBasket(string $cacheKey, array $basketItems): bool
+    public function add(string $cacheKey, array $basketItems): bool
     {
         $items = $this->cache->getItem($cacheKey);
         if (!$items->isHit()) {
@@ -36,7 +36,7 @@ class Basket
      * @return array|null
      * @throws InvalidArgumentException
      */
-    public function fetchBasket(string $cacheKey): ?array
+    public function fetch(string $cacheKey): ?array
     {
         $item = $this->cache->getItem($cacheKey);
         if (!$item->isHit()) {
@@ -51,7 +51,7 @@ class Basket
      * @return bool
      * @throws InvalidArgumentException
      */
-    public function dropBasket(string $cacheKey): bool
+    public function drop(string $cacheKey): bool
     {
         return $this->cache->deleteItem($cacheKey);
     }

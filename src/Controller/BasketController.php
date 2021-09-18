@@ -123,7 +123,7 @@ class BasketController extends BaseController
             $rePreparedProducts[$product['id']] = $product;
         }
 
-        $fetchBasketFromCache = $this->basket->fetchBasket($cacheKey);
+        $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
 
         $itemsWillBeCached = [];
 
@@ -137,39 +137,122 @@ class BasketController extends BaseController
                 $product = $rePreparedProducts[$basketItem['product']];
                 foreach ($fetchBasketFromCache as $cachedItem) {
                     if ($cachedItem['productId'] === $basketItem['product']) {
-                        $alreadyAddedProducts[] = $basketItem['product'];
-                        $cachedItem['quantity'] += $basketItem['quantity'];
-
-                        // Let's check the new quantity again for stock
-                        if ($cachedItem['quantity'] > $product['stock']) {
+                        $newQuantity = $cachedItem['quantity'] + $basketItem['quantity'];
+                        // Let's check the new quantity again for stock. If no enough stock, I will warn the customer.
+                        if ($newQuantity > $product['stock']) {
                             $noStockProducts[] = $product['name'];
-                            break;
+                            $newQuantity = $cachedItem['quantity'];
                         }
-
-                        // Unit price may be changed. So I check the unitPrice again.
-                        $cachedItem['total'] = $cachedItem['quantity'] * $product['price'];
+                        $alreadyAddedProducts[] = $basketItem['product'];
+                        $cachedItem['quantity'] = $newQuantity;
+                        // Unit price may be changed. So I get the unitPrice again from $product.
+                        $cachedItem['total'] = number_format($cachedItem['quantity'] * $product['price'], 2);
                         $itemsWillBeCached[] = $cachedItem;
                     }
                 }
             }
-            // Updated the cached products. Now let's check if any new product in basket. If so, I will push them to $itemsWillBeCached array
         }
         $itemsWillBeCached = array_merge($itemsWillBeCached, $this->setItemsWillBeCached($basketItems, $alreadyAddedProducts, $rePreparedProducts));
 
+        $message = "success";
         if ($noStockProducts) {
-            return $this->json(ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $noStockProducts)]));
+            $message = 'No more stock for ' . implode(',', $noStockProducts) . '. So I couldn\'t increase their quantities.';
         }
 
-        //dd($itemsWillBeCached);
-        $cacheDropResult = $this->basket->dropBasket($cacheKey);
+        $cacheDropResult = $this->cacheUtil->drop($cacheKey);
         if (!$cacheDropResult) {
             return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while dropping the cache']));
         }
-        $cacheAddResult = $this->basket->addBasket($cacheKey, $itemsWillBeCached);
+        $cacheAddResult = $this->cacheUtil->add($cacheKey, $itemsWillBeCached);
         if (!$cacheAddResult) {
             return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while adding to basket cache']));
         }
-        return $this->json(ReplyUtils::success(['data' => $itemsWillBeCached, 'message' => 'success']));
+        return $this->json(ReplyUtils::success(['data' => $itemsWillBeCached, 'message' => $message]));
+    }
+
+    /**
+     * @Route("/remove", name="remove", methods={"GET"})
+     * @throws InvalidArgumentException
+     * @OA\Response (
+     *     response="200",
+     *     description="Remove items and returns the new basket content",
+     *     @OA\JsonContent(
+     *           @OA\Property(property="status", type="boolean"),
+     *           @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *           @OA\Property(property="message", type="string"),
+     *        )
+     * ),
+     * @OA\Parameter (
+     *     name="product",
+     *     in="query",
+     *     description="Product ID",
+     *     @OA\Schema (type="integer"),
+     * ),
+     * @OA\Tag(name="Basket")
+     * @AnnotationSecurity(name="Authorization")
+     */
+    public function remove(Request $request): JsonResponse
+    {
+        if (!$this->checkContentType($request->headers->get('content-type'))) {
+            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+        }
+
+        $query = $request->query->all();
+
+        if (!$user = $this->getUser()) {
+            return $this->json(ReplyUtils::failure(['message' => 'No user found!']), 403);
+        }
+
+        if (!array_key_exists('product', $query) || !is_int((int)$query['product'])) {
+            return $this->json(ReplyUtils::success(['message' => 'No product found to remove from basket!']));
+        }
+        $cacheKey = md5($user->getUserIdentifier());
+        $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
+
+        $newBasketItems = array_filter($fetchBasketFromCache, static function ($item) use ($query) {
+            return $item['productId'] !== (int)$query['product'];
+        });
+
+        $cacheDropResult = $this->cacheUtil->drop($cacheKey);
+        if (!$cacheDropResult) {
+            return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while dropping the cache']));
+        }
+        $cacheAddResult = $this->cacheUtil->add($cacheKey, $newBasketItems);
+        if (!$cacheAddResult) {
+            return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while adding to basket cache']));
+        }
+        return $this->json(ReplyUtils::success(['data' => $newBasketItems, 'message' => 'success']));
+    }
+
+
+    /**
+     * @Route("", name="fetch", methods={"GET"})
+     * @throws InvalidArgumentException
+     * @OA\Response (
+     *     response="200",
+     *     description="Fetch customer basket content",
+     *     @OA\JsonContent(
+     *           @OA\Property(property="status", type="boolean"),
+     *           @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *           @OA\Property(property="message", type="string"),
+     *        )
+     * ),
+     * @OA\Tag(name="Basket")
+     * @AnnotationSecurity(name="Authorization")
+     */
+    public function list(Request $request): JsonResponse
+    {
+        if (!$this->checkContentType($request->headers->get('content-type'))) {
+            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+        }
+
+        if (!$user = $this->getUser()) {
+            return $this->json(ReplyUtils::failure(['message' => 'No user found!']), 403);
+        }
+
+        $cacheKey = md5($user->getUserIdentifier());
+        $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
+        return $this->json(ReplyUtils::success(['data' => $fetchBasketFromCache, 'message' => 'success']));
     }
 
     /**

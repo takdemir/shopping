@@ -3,25 +3,23 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
-use App\Util\Basket;
+use App\Util\CacheUtil;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
 
 trait BaseTrait
 {
     private EntityManagerInterface $em;
     private UserRepository $userRepository;
-    private Basket $basket;
+    private CacheUtil $cacheUtil;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         UserRepository $userRepository,
-        Basket $basket
+        CacheUtil $cacheUtil
     ){
-
         $this->em = $entityManager;
         $this->userRepository = $userRepository;
-        $this->basket = $basket;
+        $this->cacheUtil = $cacheUtil;
     }
 
 }

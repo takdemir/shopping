@@ -47,7 +47,7 @@ class Product
     private bool $isActive = true;
 
     /**
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="decimal", precision=8, scale=2)
      */
     private float $price;
 
