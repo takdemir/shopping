@@ -8,6 +8,7 @@ use App\Entity\Product;
 use App\Entity\User;
 use App\Form\OrderType;
 use App\Util\ReplyUtils;
+use Doctrine\ORM\AbstractQuery;
 use Psr\Cache\InvalidArgumentException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -220,12 +221,33 @@ class OrderController extends BaseController
             }
             $userRepository = $this->em->getRepository(User::class);
             $productRepository = $this->em->getRepository(Product::class);
+
+            // Let's check the basket stock again. Because stock of products may decrease after cached the items
+            $productIds = [];
+            foreach ($fetchBasketItems as $item) {
+                $productIds[] = $item['productId'];
+            }
+            $products = $productRepository->fetchProductsByIds($productIds, AbstractQuery::HYDRATE_OBJECT);
+            if (!$products) {
+                return $this->json(ReplyUtils::failure(['message' => 'Products in basket are not valid. Order creation failed!']));
+            }
+
+            // I set new array which keys are productId. I fetch all products detail at one time from DB and I will get product info without loop
+            $rePreparedProducts = [];
+            foreach ($products as $product) {
+                $rePreparedProducts[$product->getId()] = $product;
+            }
+
             $total = 0;
             foreach ($fetchBasketItems as $item) {
+                $product = $rePreparedProducts[$item['productId']];
+                if ($item['quantity'] > $product->getStock()) {
+                    return $this->json(ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $product['name'])]));
+                }
                 $orderItem = new OrderItem();
                 $orderItem->setIsActive(true);
                 $orderItem->setOrderId($order);
-                $orderItem->setProduct($productRepository->find($item['productId']));
+                $orderItem->setProduct($rePreparedProducts[$item['productId']]);
                 $orderItem->setQuantity($item['quantity']);
                 $orderItem->setUnitPrice($item['unitPrice']);
                 $orderItem->setTotal($item['total']);

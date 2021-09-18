@@ -93,6 +93,12 @@ class BasketController extends BaseController
         $noValidDataInBasketItems = [];
         $noStockProducts = [];
 
+        // I set new array which keys are productId. I fetch all products detail at one time from DB and I will get product info without loop
+        $rePreparedProducts = [];
+        foreach ($products as $product) {
+            $rePreparedProducts[$product['id']] = $product;
+        }
+
         foreach ($basketItems as $basketItem) {
             if (!array_key_exists('product', $basketItem) || !$basketItem['product']) {
                 $noValidDataInBasketItems[] = $basketItem;
@@ -102,10 +108,9 @@ class BasketController extends BaseController
                 $noValidDataInBasketItems[] = $basketItem;
                 break;
             }
-            foreach ($products as $product) {
-                if ($product['id'] === $basketItem['product'] && $basketItem['quantity'] > $product['stock']) {
-                    $noStockProducts[] = $product['name'];
-                }
+            $product = $rePreparedProducts[$basketItem['product']];
+            if ($basketItem['quantity'] > $product['stock']) {
+                $noStockProducts[] = $product['name'];
             }
         }
 
@@ -115,12 +120,6 @@ class BasketController extends BaseController
 
         if ($noStockProducts) {
             return $this->json(ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $noStockProducts)]));
-        }
-
-        // I set new array which keys are productId. I will get product info without loop
-        $rePreparedProducts = [];
-        foreach ($products as $product) {
-            $rePreparedProducts[$product['id']] = $product;
         }
 
         $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
