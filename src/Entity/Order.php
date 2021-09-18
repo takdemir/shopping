@@ -11,7 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity(repositoryClass=OrderRepository::class)
  * @ORM\Table(name="`order`")
  */
-class Order
+class Order implements \JsonSerializable
 {
     use CreatedAtTrait;
 
@@ -117,5 +117,46 @@ class Order
         $this->isActive = $isActive;
 
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize(): array
+    {
+        $user = $this->getUser();
+        $orderItems = $this->getOrderItems();
+        $preparedOrderItems = [];
+        foreach ($orderItems as $orderItem) {
+            $sub['id'] = $orderItem->getId();
+            $sub['quantity'] = $orderItem->getQuantity();
+            $sub['unitPrice'] = $orderItem->getUnitPrice();
+            $sub['total'] = $orderItem->getTotal();
+            $sub['isActive'] = $orderItem->getIsActive();
+            $product = $orderItem->getProduct();
+            $sub['product'] = [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'isActive' => $product->getIsActive(),
+                'price' => $product->getPrice(),
+                'stock' => $product->getStock(),
+                'description' => $product->getDescription(),
+                'currency' => $product->getCurrency(),
+                'createdAt' => $product->getCreatedAt()
+            ];
+            $preparedOrderItems[] = $sub;
+        }
+        return [
+            'id' => $this->getId(),
+            'total' => $this->getTotal(),
+            'isActive' => $this->getIsActive(),
+            'createdAt' => $this->getCreatedAt(),
+            'user' => [
+                'id' => $user->getId(),
+                'name' => $user->getName(),
+                'email' => $user->getEmail()
+            ],
+            'orderItems' => $preparedOrderItems
+        ];
     }
 }

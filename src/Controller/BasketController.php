@@ -87,6 +87,7 @@ class BasketController extends BaseController
         $cacheKey = md5($user->getUserIdentifier());
         $basketItems = $postedData['items'];
 
+        //Fetch all products in basket at the same time not to get them from repo one by one
         $productRepository = $this->em->getRepository(Product::class);
         $products = $productRepository->fetchProductsByIds($postedData['productIds']);
 

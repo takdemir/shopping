@@ -155,11 +155,24 @@ class OrderController extends BaseController
         if (($checkAuthorisation = $this->checkUserAuthorisation($order->getUser()->getId())) && !$checkAuthorisation['status']) {
             return $this->json($checkAuthorisation, 403);
         }
+        if ($order->getIsActive() === false) {
+            return $this->json(ReplyUtils::success(['message' => 'success']));
+        }
+        $orderItems = $order->getOrderItems();
+        foreach ($orderItems as $orderItem) {
+            // After deleting order, I increase the product's stock again. I don't check if the products are refunded or retransferred in that demo.
+            $product = $orderItem->getProduct();
+            $newStock = $product->getStock() + $orderItem->getQuantity();
+            $product->setStock($newStock);
+            $orderItem->setIsActive(false);
+            $this->em->persist($product);
+            $this->em->persist($orderItem);
+        }
         $order->setIsActive(false);
         $this->em->persist($order);
-        $this->em->flush($order);
+        $this->em->flush();
 
-        return $this->json(ReplyUtils::success(['data' => $order, 'message' => 'success']));
+        return $this->json(ReplyUtils::success(['message' => 'success']));
     }
 
 
@@ -227,6 +240,7 @@ class OrderController extends BaseController
             foreach ($fetchBasketItems as $item) {
                 $productIds[] = $item['productId'];
             }
+            //Fetch all products in basket at the same time not to get them from repo one by one
             $products = $productRepository->fetchProductsByIds($productIds, AbstractQuery::HYDRATE_OBJECT);
             if (!$products) {
                 return $this->json(ReplyUtils::failure(['message' => 'Products in basket are not valid. Order creation failed!']));
@@ -253,6 +267,11 @@ class OrderController extends BaseController
                 $orderItem->setTotal($item['total']);
                 $total += $item['total'];
                 $order->addOrderItem($orderItem);
+
+                // After adding to the order Item, I decrease the stock of the related product
+                $leftStock = $product->getStock() - $item['quantity'];
+                $product->setStock($leftStock);
+                $this->em->persist($product);
             }
             $order->setTotal($total);
             $order->setUser($userRepository->find($user->getId()));

@@ -29,8 +29,10 @@ class OrderRepository extends AbstractRepository
         return $this->createQueryBuilder('p')
             ->addSelect('PARTIAL user.{id, name, email}')
             ->addSelect('orderItems')
+            ->addSelect('product')
             ->innerJoin('p.user', 'user')
-            ->innerJoin('p.orderItems', 'orderItems');
+            ->innerJoin('p.orderItems', 'orderItems')
+            ->innerJoin('orderItems.product', 'product');
     }
 
     /**
