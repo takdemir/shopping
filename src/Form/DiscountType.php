@@ -46,6 +46,11 @@ class DiscountType extends AbstractType
                 'invalid_message' => 'Discount classname can be one of ' . implode(',', Discount::DISCOUNT_CLASS_NAMES)
             ])
             ->add('isActive', CheckboxType::class)
+            ->add('parameters', CollectionType::class, [
+                'entry_type' => TextType::class,
+                'required' => false,
+                'allow_add' => true
+            ])
             ->add('createdAt', DateTimeType::class, [
                 'required' => false,
                 'date_widget' => 'single_text',
@@ -96,9 +101,6 @@ class DiscountType extends AbstractType
                 },
                 'choice_label' => 'name',
                 'invalid_message' => 'Product is not valid'
-            ])
-            ->add('parameters', CollectionType::class, [
-                'required' => false
             ]);
     }
 

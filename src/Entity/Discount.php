@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\DiscountRepository;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -69,7 +70,7 @@ class Discount implements \JsonSerializable
     /**
      * @ORM\Column(type="json", nullable=true)
      */
-    private ?array $parameters = [];
+    private $parameters = [];
 
     public function __construct()
     {
