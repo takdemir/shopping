@@ -69,7 +69,7 @@ class Discount implements \JsonSerializable
     /**
      * @ORM\Column(type="json", nullable=true)
      */
-    private array $parameters = [];
+    private ?array $parameters = [];
 
     public function __construct()
     {

@@ -1,0 +1,993 @@
+{
+	"info": {
+		"_postman_id": "85bd63e0-7476-4229-916c-c6a6c405ee42",
+		"name": "Shopping",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "security/generate-token",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"taneryzb@hotmail.com\",\n    \"password\": \"Abcde123*\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:9041/auth/generate-token",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"auth",
+						"generate-token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user/create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\":\"taneryzb@hotmail.com\",\n    \"password\":\"Abcde123*\",\n    \"name\": \"Taner Akdemir\",\n    \"roles\": [\"ROLE_CUSTOMER\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/user",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user/edit",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\":\"taneryzb@hotmail.com\",\n    \"password\":\"Abcde123*\",\n    \"name\": \"Taner Akdemir\",\n    \"roles\": [\"ROLE_CUSTOMER\", \"ROLE_ADMIN\"],\n    \"isActive\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/user/3",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user/show",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/user/3",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user/list",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/user",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "category/list",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/category",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"category"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "category/show",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/category/1",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"category",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "category/create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"Anahtar Seti\",\n    \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/category",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"category"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "category/edit",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"Anahtar Seti\",\n    \"isActive\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/category/2",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"category",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "product/list",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/product",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"product"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "product/show",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/product/1",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"product",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "product/create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"category\": 2,\n    \"name\": \"Schneider Asfora Beyaz Komütatör-2\",\n    \"price\": 12.9555,\n    \"currency\": \"TL\",\n    \"stock\": 10,\n    \"description\": \"\",\n    \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/product",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"product"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "product/edit",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"category\": 2,\n    \"name\": \"Schneider Asfora Beyaz Komütatör\",\n    \"price\": 12.95555,\n    \"currency\": \"TL\",\n    \"stock\": 10,\n    \"description\": \"\",\n    \"isActive\": true\n}"
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/product/5",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"product",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "order/list",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/order",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "order/show",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/order/2",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"order",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "order/create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": 3\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/order",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "order/delete",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/order/2",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"order",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "basket/add",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"items\": [\n        {\n            \"product\": 1,\n            \"quantity\": 10\n        },\n        {\n            \"product\": 2,\n            \"quantity\": 6\n        },\n        {\n            \"product\": 3,\n            \"quantity\": 6\n        }\n    ],\n    \"productIds\": [1,2,3]\n}"
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/basket",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"basket"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "basket/remove",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/basket/remove?product=3",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"basket",
+						"remove"
+					],
+					"query": [
+						{
+							"key": "product",
+							"value": "3"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "basket/list",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/basket",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"basket"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "basket/empty",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/basket",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"basket"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user/orders",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/user/orders/3",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"orders",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user/revenue",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/user/revenue/3",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"revenue",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user/revenues",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/user/revenues",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"revenues"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "discount/list",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/discount",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"discount"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "discount/show",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/discount/2",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"discount",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "discount/create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": null,\n    \"category\": 1,\n    \"product\": null,\n    \"discountCode\": \"BUY_N_DECREASE_PERCENT\",\n    \"discountClassName\": \"BuyNDecreasePercentDiscount\",\n    \"isActive\": true,\n    \"startAt\": null,\n    \"expireAt\": null,\n    \"parameters\": null\n}"
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/discount",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"discount"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "discount/edit",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"user\": null,\n    \"category\": 1,\n    \"product\": null,\n    \"discountCode\": \"BUY_N_DECREASE_PERCENT\",\n    \"discountClassName\": \"BuyNDecreasePercentDiscount\",\n    \"isActive\": true,\n    \"startAt\": null,\n    \"expireAt\": null,\n    \"parameters\": null\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:9041/api/v1/discount/3",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"discount",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "order/discounts",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "x-api-token",
+						"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6InRhbmVyeXpiQGhvdG1haWwuY29tIn0.fUlXZ_sN5tisKgxjt2HSRcHJCjFLfVqV5vcAV0dkL44",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:9041/api/v1/order/discounts?order=6",
+					"host": [
+						"localhost"
+					],
+					"port": "9041",
+					"path": [
+						"api",
+						"v1",
+						"order",
+						"discounts"
+					],
+					"query": [
+						{
+							"key": "order",
+							"value": "6"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

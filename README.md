@@ -56,9 +56,21 @@ You can execute it by code below</p>
 </div>
 
 
-<p>10. You can find API DOC link below
-</p>
+<p>10. You can find API DOC link below</p>
 <div class="highlight highlight-source-shell position-relative">
     <pre>http://localhost:9041/api/doc</pre>
 </div>
 
+<p>11. You can find Shopping.postman_collection.json for api in the root of the project</p>
+<p>12. In API Requests, your content-type must be application/json and x-api-token must be your 
+generated token in te header. 
+<br/>
+You can generate x-api-token from http://localhost:9041/auth/generate-token with
+<br/>
+method: post
+{
+    "email": "taneryzb@hotmail.com",
+    "password": "Abcde123*"
+} 
+payload
+</p>
