@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\DiscountRepository;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -11,8 +12,6 @@ use Doctrine\ORM\Mapping as ORM;
 class Discount implements \JsonSerializable
 {
     use CreatedAtTrait;
-    use StartAtTrait;
-    use ExpireAtTrait;
 
     public const DISCOUNT_CLASS_NAMES = [
         'BuyNDecreasePercentDiscount',
@@ -57,11 +56,24 @@ class Discount implements \JsonSerializable
      */
     private bool $isActive;
 
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private ?DateTime $startAt = null;
+
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private ?DateTime $expireAt = null;
+
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $parameters = [];
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
-        $this->startAt = null;
-        $this->expireAt = null;
     }
 
     public function getId(): ?int
@@ -141,6 +153,42 @@ class Discount implements \JsonSerializable
         return $this;
     }
 
+    public function getStartAt(): ?DateTime
+    {
+        return $this->startAt;
+    }
+
+    public function setStartAt(?DateTime $startAt): void
+    {
+        if ($startAt) {
+            $this->startAt = $startAt;
+        }
+    }
+
+    public function getExpireAt(): ?DateTime
+    {
+        return $this->expireAt;
+    }
+
+    public function setExpireAt(?DateTime $expireAt): void
+    {
+        if ($expireAt) {
+            $this->expireAt = $expireAt;
+        }
+    }
+
+    public function getParameters(): ?array
+    {
+        return $this->parameters;
+    }
+
+    public function setParameters(?array $parameters): self
+    {
+        $this->parameters = $parameters;
+
+        return $this;
+    }
+
     public function jsonSerialize(): array
     {
         $user = $this->getUser();
@@ -154,6 +202,7 @@ class Discount implements \JsonSerializable
             'createdAt' => $this->getCreatedAt() ? $this->getCreatedAt()->format('Y-m-d H:i:s') : null,
             'startAt' => $this->getStartAt() ? $this->getStartAt()->format('Y-m-d H:i:s') : null,
             'expireAt' => $this->getExpireAt() ? $this->getExpireAt()->format('Y-m-d H:i:s') : null,
+            'parameters' => $this->getParameters(),
             'user' => $user ? [
                 'id' => $user->getId(),
                 'name' => $user->getName(),

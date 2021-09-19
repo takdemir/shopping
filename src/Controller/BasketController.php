@@ -9,6 +9,7 @@ use App\Service\PercentOverDiscount;
 use App\Service\BuyNDecreasePercentDiscount;
 use App\Service\BuyNPayKDiscount;
 use App\Util\ReplyUtils;
+use Doctrine\ORM\AbstractQuery;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -98,7 +99,7 @@ class BasketController extends BaseController
         $cacheData = $processResult['data'];
         $message = $processResult['message'];
 
-        dd($cacheData);
+        //dd($cacheData);
 
         $cacheKey = md5($user->getUserIdentifier());
 
@@ -110,7 +111,7 @@ class BasketController extends BaseController
         if (!$cacheAddResult) {
             return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while adding to basket cache']));
         }
-        return $this->json(ReplyUtils::success(['data' => $cacheData, 'basketTotal' => $basketTotal, 'message' => $message]));
+        return $this->json(ReplyUtils::success(['data' => $cacheData, 'message' => $message]));
     }
 
     /**
@@ -208,7 +209,7 @@ class BasketController extends BaseController
                 }
             }
         }
-        
+
         $mergedBasketItems = array_merge($itemsWillBeReCached, $this->setPostedItemsWillBeReCached($postedItems, $alreadyAddedProducts, $products));
 
         $message = "success";
@@ -231,11 +232,7 @@ class BasketController extends BaseController
         // Let's start to calculate discounts
         $discountResult = $this->calculateDiscount($products, $cacheData);
 
-        if ($discountResult) {
-            $cacheData = $discountResult;
-        }
-
-        return ReplyUtils::success(['data' => $cacheData, 'message' => $message]);
+        return ReplyUtils::success(['data' => $discountResult, 'message' => $message]);
     }
 
 
@@ -246,59 +243,41 @@ class BasketController extends BaseController
      */
     private function calculateDiscount(array $products, array $cacheData): array
     {
-
         // First, let's fetch all active, started and not expired discounts.
         $now = new \DateTime();
         $discountRepository = $this->em->getRepository(Discount::class);
-        $fetchDiscounts = $discountRepository->fetchAvailableDiscounts();
-        if(!$fetchDiscounts){
+        $availableDiscounts = $discountRepository->fetchAvailableDiscounts(AbstractQuery::HYDRATE_OBJECT);
+
+        // If no available discount, return cache data own.
+        if (!$availableDiscounts) {
             return $cacheData;
         }
         $discountedCacheData = [];
-        //dd($fetchDiscounts);
-        if ($fetchDiscounts) {
+        //dd($availableDiscounts);
 
-            foreach ($fetchDiscounts as $discount) {
+        foreach ($availableDiscounts as $discount) {
 
-                //Let's check if any start date for discount. If so I will check if discount is started or not. If not, I will continue
-                if (!is_null($discount->getStartAt()) && $discount->getStartAt() > $now) {
-                    continue;
-                }
-
-                //Let's check if any expiry date for discount. If so I will check if discount has expired or not. If so, I will continue
-                if (!is_null($discount->getExpireAt()) && $discount->getExpireAt() < $now) {
-                    continue;
-                }
-
-                /**
-                 * @var DiscountInterface $discountCalculator
-                 */
-                $className = $discount->getDiscountClassName();
-                if (!$className) {
-                    continue;
-                }
-
-                switch ($className) {
-                    case 'PercentOverDiscount':
-                        $discountCalculator = new PercentOverDiscount();
-                        break;
-                    case 'BuyNPayKDiscount':
-                        $discountCalculator = new BuyNPayKDiscount();
-                        break;
-                    case 'BuyNDecreasePercentDiscount':
-                        $discountCalculator = new BuyNDecreasePercentDiscount();
-                        break;
-                }
-
-                $discountResult = $discountCalculator->calculateDiscount($cacheData, $discount);
-
-                $discountedCacheData = [
-                    'items' => $discountResult['items'],
-                    'basketTotal' => $cacheData['basketTotal'],
-                    'basketDiscountedTotal' => $discountResult['basketDiscountedTotal'],
-                    'discounts' => $discountResult['discounts']
-                ];
+            /**
+             * @var DiscountInterface $discountCalculator
+             */
+            $className = $discount->getDiscountClassName();
+            if (!$className) {
+                continue;
             }
+
+            switch ($className) {
+                case 'PercentOverDiscount':
+                    $discountCalculator = new PercentOverDiscount();
+                    break;
+                case 'BuyNPayKDiscount':
+                    $discountCalculator = new BuyNPayKDiscount();
+                    break;
+                case 'BuyNDecreasePercentDiscount':
+                    $discountCalculator = new BuyNDecreasePercentDiscount();
+                    break;
+            }
+
+            $discountedCacheData = $discountCalculator->calculateDiscount($cacheData, $discount);
         }
 
         return $discountedCacheData;

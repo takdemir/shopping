@@ -9,6 +9,10 @@ class PercentOverDiscount implements DiscountInterface
 
     public function calculateDiscount(array $basketItems, Discount $discount): array
     {
+        //If that discount is implemented before, don't implement again
+        if (array_key_exists($discount->getDiscountCode(), $basketItems['discounts'])) {
+            return $basketItems;
+        }
         $discountedBasketItems = $basketItems['items'];
         $basketTotal = $basketItems['basketTotal'];
         $discountAmount = 0;
@@ -22,11 +26,14 @@ class PercentOverDiscount implements DiscountInterface
             'items' => $discountedBasketItems,
             'basketTotal' => $basketTotal,
             'basketDiscountedTotal' => number_format($discountedTotal, 2, ',', ''),
-            'discounts' => [
-                'discountReason' => $discount->getDiscountCode(),
-                'discountAmount' => number_format($discountAmount, 2, ',', ''),
-                'discountedTotal' => number_format($discountedTotal, 2, ',', ''),
-            ]];
+            'discounts' => array_merge($basketItems['discounts'], [
+                $discount->getDiscountCode() => [
+                    'discountReason' => $discount->getDiscountCode(),
+                    'discountAmount' => number_format($discountAmount, 2, ',', ''),
+                    'discountedTotal' => number_format($discountedTotal, 2, ',', ''),
+                ]
+            ])
+        ];
     }
 
     public function removeDiscount(array $basketItems)

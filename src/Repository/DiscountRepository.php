@@ -70,11 +70,18 @@ class DiscountRepository extends AbstractRepository
         return $this->paginator($discounts->getQuery(), $page, $offset, $hydrationMode);
     }
 
-
-
-    public function fetchAvailableDiscounts(){
+    /**
+     * @param string|int $hydrationMode
+     * @return array
+     */
+    public function fetchAvailableDiscounts(string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
+    {
         $now = new \DateTime();
-        $discounts = $this->commonJoin()
-            ->where('p.isActive=:isActive')->setParameter('isActive',true);
+        return $this->commonJoin()
+            ->where('p.isActive=:isActive')->setParameter('isActive', true)
+            ->andWhere('p.startAt>=:startAt or p.startAt is null')->setParameter('startAt', $now)
+            ->andWhere('p.expireAt<=:expireAt or p.expireAt is null')->setParameter('expireAt', $now)
+            ->getQuery()
+            ->getResult($hydrationMode);
     }
 }
