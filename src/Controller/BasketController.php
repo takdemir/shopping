@@ -79,112 +79,28 @@ class BasketController extends BaseController
             return $this->json(ReplyUtils::failure(['message' => 'No user found!']), 403);
         }
 
+        // Check the payload in posted data
         if (!array_key_exists('items', $postedData) || !$postedData['items']) {
             return $this->json(ReplyUtils::success(['message' => 'No items found in the basket!']));
         }
 
-        //  I extra sent product IDs not to loop in items to get product IDs,
+        //  I sent product IDs extra in payload of posted data to prevent looping in basket items to get product IDs,
         if (!array_key_exists('productIds', $postedData) || !$postedData['productIds']) {
             return $this->json(ReplyUtils::success(['message' => 'No productIds found in the basket!']));
         }
 
-        $cacheKey = md5($user->getUserIdentifier());
-        $basketItems = $postedData['items'];
+        // Start to basket process
+        $processResult = $this->process($postedData);
 
-        //Fetch all products in basket at the same time not to get them from repo one by one
-        $productRepository = $this->em->getRepository(Product::class);
-        $products = $productRepository->fetchProductsByIds($postedData['productIds']);
-
-        $noValidDataInBasketItems = [];
-        $noStockProducts = [];
-
-        // I set new array which keys are productId. I fetch all products detail at one time from DB and I will get product info without loop
-        $rePreparedProducts = [];
-        foreach ($products as $product) {
-            $rePreparedProducts[$product['id']] = $product;
+        if (!$processResult['status']) {
+            return $this->json($processResult);
         }
-
-        foreach ($basketItems as $basketItem) {
-            if (!array_key_exists('product', $basketItem) || !$basketItem['product']) {
-                $noValidDataInBasketItems[] = $basketItem;
-                break;
-            }
-            if (!array_key_exists('quantity', $basketItem) || $basketItem['quantity'] === 0 || !is_int((int)$basketItem['quantity'])) {
-                $noValidDataInBasketItems[] = $basketItem;
-                break;
-            }
-            $product = $rePreparedProducts[$basketItem['product']];
-            if ($basketItem['quantity'] > $product['stock']) {
-                $noStockProducts[] = $product['name'];
-            }
-        }
-
-        if ($noValidDataInBasketItems) {
-            return $this->json(ReplyUtils::failure(['message' => 'All items objects must contain product and quantity info. Please check it!']));
-        }
-
-        if ($noStockProducts) {
-            return $this->json(ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $noStockProducts)]));
-        }
-
-        $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
-
-        $itemsWillBeCached = [];
-
-        // There may be a customer cached basket. That is why, I check the data in cache. If so,  I will merge the new basket data to cached file, else I will add it to basket as a new item
-
-        $alreadyAddedProducts = [];
-
-        if ($fetchBasketFromCache && array_key_exists('items', $fetchBasketFromCache)) {
-            $items = $fetchBasketFromCache['items'];
-            foreach ($basketItems as $basketItem) {
-                $product = $rePreparedProducts[$basketItem['product']];
-                foreach ($items as $key => $cachedItem) {
-                    if ($cachedItem['productId'] === $basketItem['product']) {
-                        $newQuantity = $cachedItem['quantity'] + $basketItem['quantity'];
-                        // Let's check the new quantity again for stock. If no enough stock, I will warn the customer.
-                        if ($newQuantity > $product['stock']) {
-                            $noStockProducts[] = $product['name'];
-                            $newQuantity = ($cachedItem['quantity'] < $product['stock']) ? $cachedItem['quantity'] : $product['stock'];
-                            if ($newQuantity === 0) {
-                                unset($items[$key]);
-                                continue;
-                            }
-                        }
-                        $alreadyAddedProducts[] = $basketItem['product'];
-                        $cachedItem['quantity'] = $newQuantity;
-                        // Unit price may be changed. So I get the unitPrice again from $product.
-                        $cachedItem['total'] = number_format($cachedItem['quantity'] * $product['price'], 2, '.', '');
-                        $itemsWillBeCached[] = $cachedItem;
-                    }
-                }
-            }
-        }
-        $newCachedItems = array_merge($itemsWillBeCached, $this->setItemsWillBeCached($basketItems, $alreadyAddedProducts, $rePreparedProducts));
-
-        $basketTotal = 0;
-        if ($newCachedItems) {
-            $basketTotal = $this->calculateBasketTotal($newCachedItems);
-        }
-
-        $cacheData = [
-            'items' => $newCachedItems,
-            'basketTotal' => $basketTotal,
-            'basketDiscountedTotal' => $basketTotal,
-            'discounts' => []
-        ];
-
-        $discountResult = $this->calculateDiscount($rePreparedProducts, $cacheData);
-        if ($discountResult) {
-            $cacheData = $discountResult;
-        }
+        $cacheData = $processResult['data'];
+        $message = $processResult['message'];
 
         dd($cacheData);
 
-        $message = "success";
-        if ($noStockProducts) {
-            $message = 'No more stock for ' . implode(',', $noStockProducts) . '. So I couldn\'t increase their quantities.';
-        }
+        $cacheKey = md5($user->getUserIdentifier());
 
         $cacheDropResult = $this->cacheUtil->drop($cacheKey);
         if (!$cacheDropResult) {
@@ -197,22 +113,151 @@ class BasketController extends BaseController
         return $this->json(ReplyUtils::success(['data' => $cacheData, 'basketTotal' => $basketTotal, 'message' => $message]));
     }
 
+    /**
+     * @param array $postedData
+     * @return array
+     * @throws InvalidArgumentException
+     */
+    private function process(array $postedData): array
+    {
+        if (!$user = $this->getUser()) {
+            return ReplyUtils::failure(['message' => 'No user found!']);
+        }
+
+        // Creating a unique cache key for customer
+        $cacheKey = md5($user->getUserIdentifier());
+        $postedItems = $postedData['items'];
+
+        //Fetch all products details in basket at the same time not to get them from repo one by one
+        $productRepository = $this->em->getRepository(Product::class);
+        $products = $productRepository->fetchProductsByIds($postedData['productIds']);
+
+        // I will collect any invalid items or out of stock product in basket items into below variables while checking the data
+        $anyInValidDataInPostedItems = [];
+        $outOfStockProducts = [];
+
+        // Started to check postedItems if any missing parameter or any out of stock product
+        foreach ($postedItems as $postedItem) {
+            if (!array_key_exists('product', $postedItem) || !$postedItem['product']) {
+                $anyInValidDataInPostedItems[] = $postedItem;
+                break;
+            }
+            if (!array_key_exists('quantity', $postedItem) || $postedItem['quantity'] === 0 || !is_int((int)$postedItem['quantity'])) {
+                $anyInValidDataInPostedItems[] = $postedItem;
+                break;
+            }
+            $product = $products[$postedItem['product']];
+            if ($postedItem['quantity'] > $product['stock']) {
+                $outOfStockProducts[] = $product['name'];
+            }
+        }
+
+        if ($anyInValidDataInPostedItems) {
+            return ReplyUtils::failure(['message' => 'All items objects must contain product and quantity info. Please check it!']);
+        }
+
+        if ($outOfStockProducts) {
+            return ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $outOfStockProducts)]);
+        }
+
+
+        // After checking payload in posted data, Let's check if customer has a data in cache.
+        $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
+
+        // I will merge previous cached basket and new posted items in $itemsWillBeReCached variable below
+        $itemsWillBeReCached = [];
+
+        // There may be a customer cached basket. That is why, I check the data in cache.
+        // If so, I will merge the new basket data to cached file, else I will add it to basket as a new item
+
+        $alreadyAddedProducts = [];
+
+        if ($fetchBasketFromCache && array_key_exists('items', $fetchBasketFromCache)) {
+            // Get basket items in the cache
+            $cachedItems = $fetchBasketFromCache['items'];
+
+            // Compare the posted items and cached items to find the same products and increase the quantity and total of that product
+            foreach ($postedItems as $postedItem) {
+                $product = $products[$postedItem['product']];
+                foreach ($cachedItems as $key => $cachedItem) {
+                    if ($cachedItem['productId'] === $postedItem['product']) {
+
+                        // If product stock is exhausted, then remove that item
+                        if ($product['stock'] === 0) {
+                            unset($cachedItems[$key]);
+                            continue;
+                        }
+
+                        // Increase the quantity
+                        $newQuantity = $cachedItem['quantity'] + $postedItem['quantity'];
+
+                        // Let's check the new quantity again for stock. If stock is not enough, I will warn the customer.
+                        if ($newQuantity > $product['stock']) {
+                            $outOfStockProducts[] = $product['name'];
+
+                            // If products stock is less than new added quantity, check cached item quantity.
+                            // If it is also greater than product stock than new quantity will be available product stock
+                            $newQuantity = ($cachedItem['quantity'] < $product['stock']) ? $cachedItem['quantity'] : $product['stock'];
+                        }
+                        $alreadyAddedProducts[] = $postedItem['product'];
+                        $cachedItem['quantity'] = $newQuantity;
+                        // Unit price may be changed. So I get the unitPrice again from $product.
+                        $cachedItem['total'] = number_format($cachedItem['quantity'] * $product['price'], 2, '.', '');
+                        $itemsWillBeReCached[] = $cachedItem;
+                    }
+                }
+            }
+        }
+        
+        $mergedBasketItems = array_merge($itemsWillBeReCached, $this->setPostedItemsWillBeReCached($postedItems, $alreadyAddedProducts, $products));
+
+        $message = "success";
+        if ($outOfStockProducts) {
+            $message = 'No more stock for ' . implode(',', $outOfStockProducts) . '. So I couldn\'t increase their quantities.';
+        }
+
+        $basketTotal = 0;
+        if ($mergedBasketItems) {
+            $basketTotal = $this->calculateBasketTotal($mergedBasketItems);
+        }
+
+        $cacheData = [
+            'items' => $mergedBasketItems,
+            'basketTotal' => $basketTotal,
+            'basketDiscountedTotal' => $basketTotal,
+            'discounts' => []
+        ];
+
+        // Let's start to calculate discounts
+        $discountResult = $this->calculateDiscount($products, $cacheData);
+
+        if ($discountResult) {
+            $cacheData = $discountResult;
+        }
+
+        return ReplyUtils::success(['data' => $cacheData, 'message' => $message]);
+    }
+
 
     /**
-     * @param array $rePreparedProducts
+     * @param array $products
      * @param array $cacheData
      * @return array
      */
-    private function calculateDiscount(array $rePreparedProducts, array $cacheData): array
+    private function calculateDiscount(array $products, array $cacheData): array
     {
-        $discountedCacheData = $cacheData;
 
-        // Let's calculate the discounts. First, let's fetch all active, started and not expired discounts.
+        // First, let's fetch all active, started and not expired discounts.
+        $now = new \DateTime();
         $discountRepository = $this->em->getRepository(Discount::class);
-        $fetchDiscounts = $discountRepository->findBy(['isActive' => true]);
+        $fetchDiscounts = $discountRepository->fetchAvailableDiscounts();
+        if(!$fetchDiscounts){
+            return $cacheData;
+        }
+        $discountedCacheData = [];
         //dd($fetchDiscounts);
         if ($fetchDiscounts) {
-            $now = new \DateTime();
+
             foreach ($fetchDiscounts as $discount) {
 
                 //Let's check if any start date for discount. If so I will check if discount is started or not. If not, I will continue
@@ -245,22 +290,14 @@ class BasketController extends BaseController
                         break;
                 }
 
-                if (($category = $discount->getCategory()) && !is_null($category)) {
-                    foreach ($rePreparedProducts as $rePreparedProduct) {
-                        if ($rePreparedProduct['category']['id'] !== $category->getId()) {
-                            continue;
-                        }
-                    }
-                } else {
-                    $discountResult = $discountCalculator->calculateDiscount($cacheData, $discount);
-                    $discountedCacheData = [
-                        'items' => $discountResult['items'],
-                        'basketTotal' => $cacheData['basketTotal'],
-                        'basketDiscountedTotal' => $discountResult['basketDiscountedTotal'],
-                        'discounts' => $discountResult['discounts']
-                    ];
+                $discountResult = $discountCalculator->calculateDiscount($cacheData, $discount);
 
-                }
+                $discountedCacheData = [
+                    'items' => $discountResult['items'],
+                    'basketTotal' => $cacheData['basketTotal'],
+                    'basketDiscountedTotal' => $discountResult['basketDiscountedTotal'],
+                    'discounts' => $discountResult['discounts']
+                ];
             }
         }
 
@@ -412,16 +449,10 @@ class BasketController extends BaseController
         $productRepository = $this->em->getRepository(Product::class);
         $products = $productRepository->fetchProductsByIds($productIds);
 
-        $noStockProducts = [];
-
-        // I set new array which keys are productId. I fetch all products detail at one time from DB and I will get product info without loop
-        $rePreparedProducts = [];
-        foreach ($products as $product) {
-            $rePreparedProducts[$product['id']] = $product;
-        }
+        $outOfStockProducts = [];
 
         foreach ($items as $key => &$item) {
-            $product = $rePreparedProducts[$item['productId']];
+            $product = $products[$item['productId']];
             // If stock is 0 than remove from basket
             if ($product['stock'] === 0) {
                 unset($items[$key]);
@@ -429,7 +460,7 @@ class BasketController extends BaseController
             }
             if ($item['quantity'] > $product['stock']) {
                 $item['quantity'] = $product['stock'];
-                $noStockProducts[] = $product['name'];
+                $outOfStockProducts[] = $product['name'];
             }
             $item['unitPrice'] = $product['price'];
             $item['total'] = $product['price'] * $item['quantity'];
@@ -447,7 +478,7 @@ class BasketController extends BaseController
             'discounts' => $fetchBasketFromCache['discounts']
         ];
 
-        $discountResult = $this->calculateDiscount($rePreparedProducts, $cacheData);
+        $discountResult = $this->calculateDiscount($products, $cacheData);
         if ($discountResult) {
             $cacheData = $discountResult;
         }
@@ -457,49 +488,49 @@ class BasketController extends BaseController
         $this->cacheUtil->add($cacheKey, $cacheData);
 
         $message = 'success';
-        if ($noStockProducts) {
-            $message = implode(',', $noStockProducts) . ' are less than stock. So we changed the quantity of that product in your basket.';
+        if ($outOfStockProducts) {
+            $message = implode(',', $outOfStockProducts) . ' are less than stock. So we changed the quantity of that product in your basket.';
         }
         return $this->json(ReplyUtils::success(['data' => $cacheData, 'basketTotal' => $basketTotal, 'message' => $message]));
     }
 
     /**
-     * @param array $basketItems
+     * @param array $postedItems
      * @param array $alreadyAddedProducts
-     * @param array $rePreparedProducts
+     * @param array $products
      * @return array
      */
-    private function setItemsWillBeCached(array $basketItems, array $alreadyAddedProducts, array $rePreparedProducts): array
+    private function setPostedItemsWillBeReCached(array $postedItems, array $alreadyAddedProducts, array $products): array
     {
-        $itemsWillBeCached = [];
+        $itemsWillBeReCached = [];
 
-        foreach ($basketItems as $basketItem) {
-            if (in_array($basketItem['product'], $alreadyAddedProducts)) {
+        foreach ($postedItems as $postedItem) {
+            if (in_array($postedItem['product'], $alreadyAddedProducts)) {
                 continue;
             }
-            $product = $rePreparedProducts[$basketItem['product']];
+            $product = $products[$postedItem['product']];
             if ($product) {
                 $sub['productId'] = $product['id'];
                 $sub['name'] = $product['name'];
-                $sub['quantity'] = $basketItem['quantity'];
+                $sub['quantity'] = $postedItem['quantity'];
                 $sub['unitPrice'] = $product['price'];
-                $sub['total'] = $basketItem['quantity'] * $product['price'];
-                $itemsWillBeCached[] = $sub;
+                $sub['total'] = $postedItem['quantity'] * $product['price'];
+                $itemsWillBeReCached[] = $sub;
             }
         }
 
-        return $itemsWillBeCached;
+        return $itemsWillBeReCached;
     }
 
 
     /**
-     * @param array $newCachedItems
+     * @param array $mergedBasketItems
      * @return string
      */
-    private function calculateBasketTotal(array $newCachedItems): string
+    private function calculateBasketTotal(array $mergedBasketItems): string
     {
         $total = 0;
-        foreach ($newCachedItems as $item) {
+        foreach ($mergedBasketItems as $item) {
             $total += $item['total'];
         }
         return number_format($total, 2, '.', '');

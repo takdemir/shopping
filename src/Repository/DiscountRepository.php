@@ -69,4 +69,12 @@ class DiscountRepository extends AbstractRepository
 
         return $this->paginator($discounts->getQuery(), $page, $offset, $hydrationMode);
     }
+
+
+
+    public function fetchAvailableDiscounts(){
+        $now = new \DateTime();
+        $discounts = $this->commonJoin()
+            ->where('p.isActive=:isActive')->setParameter('isActive',true);
+    }
 }

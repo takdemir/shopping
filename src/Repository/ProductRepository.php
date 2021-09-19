@@ -69,9 +69,16 @@ class ProductRepository extends AbstractRepository
      */
     public function fetchProductsByIds(array $productIds, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
     {
-        return $this->commonJoin()
+        $products = $this->commonJoin()
             ->where('p.id in (' . implode(',', $productIds) . ')')
             ->getQuery()
             ->getResult($hydrationMode);
+
+        // I set new array which keys are productId.
+        $reArrangedProductsArray = [];
+        foreach ($products as $product) {
+            $reArrangedProductsArray[$product['id']] = $product;
+        }
+        return $reArrangedProductsArray;
     }
 }
