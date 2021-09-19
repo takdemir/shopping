@@ -305,4 +305,105 @@ class OrderController extends BaseController
             return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
         }*/
     }
+
+
+
+    /**
+     * @Route("/discounts", name="discounts", methods={"GET"})
+     * @OA\Response (
+     *     response="200",
+     *     description="Returns the all searched order discounts",
+     *     @OA\JsonContent(
+     *           @OA\Property(property="status", type="boolean"),
+     *           @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *           @OA\Property(property="pagesCount", type="integer"),
+     *           @OA\Property(property="totalDataCount", type="integer"),
+     *        )
+     * ),
+     * @OA\Parameter (
+     *     name="order",
+     *     in="query",
+     *     description="Order ID. Not required",
+     *     @OA\Schema (type="integer"),
+     * ),
+     * @OA\Parameter (
+     *     name="user",
+     *     in="query",
+     *     description="User ID. Not required",
+     *     @OA\Schema (type="integer"),
+     * ),
+     * @OA\Parameter (
+     *     name="discount_reason",
+     *     in="query",
+     *     description="discount_reason",
+     *     @OA\Schema (type="string"),
+     * ),
+     * @OA\Parameter (
+     *     name="page",
+     *     in="query",
+     *     description="Page",
+     *     @OA\Schema (type="integer"),
+     * ),
+     * @OA\Parameter (
+     *     name="offset",
+     *     in="query",
+     *     description="Offset",
+     *     @OA\Schema (type="integer"),
+     * )
+     * @OA\Tag(name="Order")
+     * @AnnotationSecurity(name="Authorization")
+     */
+    public function discounts(Request $request): JsonResponse
+    {
+        if (!$this->checkContentType($request->headers->get('content-type'))) {
+            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
+        }
+
+        $query = $request->query->all();
+
+        $order = null;
+        if (array_key_exists('order', $query) && is_int((int)$query['order'])) {
+            $order = (int)$query['order'];
+        }
+
+        $user = null;
+        if (array_key_exists('customer', $query) && is_int((int)$query['customer'])) {
+            $user = (int)$query['customer'];
+        }
+
+        if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
+            return $this->json($checkAuthorisation, 403);
+        }
+
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $user = $this->getUser()->getId();
+        }
+
+        $discountReason = null;
+        if (array_key_exists('discount_reason', $query) && !trim($query['discount_reason'])) {
+            $discountReason = trim($query['discount_reason']);
+        }
+
+        $page = 1;
+        if (array_key_exists('page', $query) && is_int((int)$query['page'])) {
+            $page = (int)$query['page'];
+        }
+
+        $offset = 100;
+        if (array_key_exists('offset', $query) && is_int((int)$query['offset'])) {
+            $offset = (int)$query['offset'] <= 100 ? (int)$query['offset'] : 100;
+        }
+
+        $parameters = [
+            'order' => $order,
+            'user' => $user,
+            'discountReason' => $discountReason,
+            'page' => $page,
+            'offset' => $offset,
+        ];
+
+        $orderDiscountRepository = $this->em->getRepository(OrderDiscount::class);
+        $orderDiscounts = $orderDiscountRepository->search($parameters);
+        return $this->json(ReplyUtils::success($orderDiscounts));
+    }
 }

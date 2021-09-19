@@ -26,12 +26,10 @@ class OrderDiscountRepository extends AbstractRepository
     private function commonJoin(): QueryBuilder
     {
         return $this->createQueryBuilder('p')
-            ->addSelect('order')
-            ->addSelect('orderItem')
-            ->addSelect('product')
-            ->leftJoin('p.orderId', 'order')
-            ->leftJoin('p.orderItem', 'orderItem')
-            ->leftJoin('orderItem.product', 'product');
+            ->addSelect('orderId')
+            ->addSelect('PARTIAL user.{id, name, email}')
+            ->innerJoin('p.orderId', 'orderId')
+            ->innerJoin('orderId.user', 'user');
     }
 
     /**
@@ -41,15 +39,23 @@ class OrderDiscountRepository extends AbstractRepository
      */
     public function search(array $searchParameters, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
     {
-        $orders = $this->commonJoin()->where('p.id is not null');
+        $orderDiscounts = $this->commonJoin()->where('p.id is not null');
+
+        if ($searchParameters['user']) {
+            $orderDiscounts->andWhere('user.id=:userId')->setParameter('userId', $searchParameters['user']);
+        }
+
+        if ($searchParameters['order']) {
+            $orderDiscounts->andWhere('orderId.id=:orderId')->setParameter('orderId', $searchParameters['order']);
+        }
 
         if ($searchParameters['discountReason']) {
-            $orders->andWhere('p.discountReason=:discountReason')->setParameter('discountReason', $searchParameters['discountReason']);
+            $orderDiscounts->andWhere('p.discountReason=:discountReason')->setParameter('discountReason', $searchParameters['discountReason']);
         }
 
         $page = (int)$searchParameters['page'];
         $offset = (int)$searchParameters['offset'];
 
-        return $this->paginator($orders->getQuery(), $page, $offset, $hydrationMode);
+        return $this->paginator($orderDiscounts->getQuery(), $page, $offset, $hydrationMode);
     }
 }
