@@ -208,7 +208,7 @@ class OrderController extends BaseController
      */
     public function create(Request $request): JsonResponse
     {
-        try {
+        /*try {*/
             if (!$this->checkContentType($request->headers->get('content-type'))) {
                 return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
             }
@@ -261,14 +261,14 @@ class OrderController extends BaseController
                 $orderItem->setIsActive(true);
                 $orderItem->setOrderId($order);
                 $orderItem->setProduct($products[$item['productId']]);
-                $orderItem->setQuantity($item['quantity']);
-                $orderItem->setUnitPrice($item['unitPrice']);
-                $orderItem->setTotal($item['total']);
-                $total += $item['total'];
+                $orderItem->setQuantity((int)$item['quantity']);
+                $orderItem->setUnitPrice((float)$item['unitPrice']);
+                $orderItem->setTotal((float)$item['total']);
+                $total += (float)$item['total'];
                 $order->addOrderItem($orderItem);
 
                 // After adding to the order Item, I decrease the stock of the related product
-                $leftStock = $product->getStock() - $item['quantity'];
+                $leftStock = $product->getStock() - (int)$item['quantity'];
                 $product->setStock($leftStock);
                 $this->em->persist($product);
 
@@ -279,7 +279,6 @@ class OrderController extends BaseController
                 foreach ($discounts as $discountCodeName => $discount) {
                     $orderDiscount = new OrderDiscount();
                     $orderDiscount->setOrderId($order);
-                    $orderDiscount->setOrderItem(null);
                     $orderDiscount->setDiscountReason($discountCodeName);
                     $orderDiscount->setDiscountAmount((float)$discount['discountAmount']);
                     $orderDiscount->setTotalDiscount((float)$discount['discountAmount']);
@@ -301,9 +300,9 @@ class OrderController extends BaseController
 
             return $this->json(ReplyUtils::success(['data' => $order->getId(), 'message' => 'success']));
 
-        } catch (InvalidArgumentException | \Exception $exception) {
+        /*} catch (InvalidArgumentException | \Exception $exception) {
             //TODO: Log
             return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
-        }
+        }*/
     }
 }

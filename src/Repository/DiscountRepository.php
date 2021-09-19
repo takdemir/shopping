@@ -79,8 +79,8 @@ class DiscountRepository extends AbstractRepository
         $now = new \DateTime();
         return $this->commonJoin()
             ->where('p.isActive=:isActive')->setParameter('isActive', true)
-            ->andWhere('p.startAt>=:startAt or p.startAt is null')->setParameter('startAt', $now)
-            ->andWhere('p.expireAt<=:expireAt or p.expireAt is null')->setParameter('expireAt', $now)
+            ->andWhere('p.startAt<=:startAt or p.startAt is null')->setParameter('startAt', $now)
+            ->andWhere('p.expireAt>=:expireAt or p.expireAt is null')->setParameter('expireAt', $now)
             ->getQuery()
             ->getResult($hydrationMode);
     }

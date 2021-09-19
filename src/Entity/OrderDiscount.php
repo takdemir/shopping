@@ -44,11 +44,6 @@ class OrderDiscount
      */
     private float $discountedTotal;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=OrderItem::class, inversedBy="orderDiscounts")
-     */
-    private ?OrderItem $orderItem;
-
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -115,18 +110,6 @@ class OrderDiscount
     public function setDiscountedTotal(float $discountedTotal): self
     {
         $this->discountedTotal = $discountedTotal;
-
-        return $this;
-    }
-
-    public function getOrderItem(): ?OrderItem
-    {
-        return $this->orderItem;
-    }
-
-    public function setOrderItem(?OrderItem $orderItem): self
-    {
-        $this->orderItem = $orderItem;
 
         return $this;
     }

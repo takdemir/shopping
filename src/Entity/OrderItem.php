@@ -51,14 +51,8 @@ class OrderItem
      */
     private bool $isActive = true;
 
-    /**
-     * @ORM\OneToMany(targetEntity=OrderDiscount::class, mappedBy="orderItem")
-     */
-    private $orderDiscounts;
-
     public function __construct()
     {
-        $this->orderDiscounts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -134,36 +128,6 @@ class OrderItem
     public function setIsActive(bool $isActive): self
     {
         $this->isActive = $isActive;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|OrderDiscount[]
-     */
-    public function getOrderDiscounts(): Collection
-    {
-        return $this->orderDiscounts;
-    }
-
-    public function addOrderDiscount(OrderDiscount $orderDiscount): self
-    {
-        if (!$this->orderDiscounts->contains($orderDiscount)) {
-            $this->orderDiscounts[] = $orderDiscount;
-            $orderDiscount->setOrderItem($this);
-        }
-
-        return $this;
-    }
-
-    public function removeOrderDiscount(OrderDiscount $orderDiscount): self
-    {
-        if ($this->orderDiscounts->removeElement($orderDiscount)) {
-            // set the owning side to null (unless already changed)
-            if ($orderDiscount->getOrderItem() === $this) {
-                $orderDiscount->setOrderItem(null);
-            }
-        }
 
         return $this;
     }
