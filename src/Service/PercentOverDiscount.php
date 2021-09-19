@@ -15,12 +15,17 @@ class PercentOverDiscount implements DiscountInterface
         }
         $discountedBasketItems = $basketItems['items'];
         $basketTotal = $basketItems['basketTotal'];
+        $basketDiscountedTotal = $basketItems['basketDiscountedTotal'];
         $discountAmount = 0;
         $discountedTotal = 0;
 
-        if ((float)$basketItems['basketTotal'] >= 1000) {
-            $discountAmount = $basketTotal * 0.1;
-            $discountedTotal = $basketTotal - $discountAmount;
+        //TODO: get this parameters from DB
+        $parameters = ['basketTotalForDiscount' => 1000, 'discountPercent' => 10];
+
+        // Because of another discount is implemented before that discount, I get $basketDiscountedTotal value to calculate
+        if ((float)$basketItems['basketTotal'] >= $parameters['basketTotalForDiscount']) {
+            $discountAmount = $basketDiscountedTotal * ($parameters['discountPercent'] / 100);
+            $discountedTotal = $basketDiscountedTotal - $discountAmount;
         }
         return [
             'items' => $discountedBasketItems,

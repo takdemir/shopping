@@ -114,174 +114,6 @@ class BasketController extends BaseController
         return $this->json(ReplyUtils::success(['data' => $cacheData, 'message' => $message]));
     }
 
-    /**
-     * @param array $postedData
-     * @return array
-     * @throws InvalidArgumentException
-     */
-    private function process(array $postedData): array
-    {
-        if (!$user = $this->getUser()) {
-            return ReplyUtils::failure(['message' => 'No user found!']);
-        }
-
-        // Creating a unique cache key for customer
-        $cacheKey = md5($user->getUserIdentifier());
-        $postedItems = $postedData['items'];
-
-        //Fetch all products details in basket at the same time not to get them from repo one by one
-        $productRepository = $this->em->getRepository(Product::class);
-        $products = $productRepository->fetchProductsByIds($postedData['productIds']);
-
-        // I will collect any invalid items or out of stock product in basket items into below variables while checking the data
-        $anyInValidDataInPostedItems = [];
-        $outOfStockProducts = [];
-
-        // Started to check postedItems if any missing parameter or any out of stock product
-        foreach ($postedItems as $postedItem) {
-            if (!array_key_exists('product', $postedItem) || !$postedItem['product']) {
-                $anyInValidDataInPostedItems[] = $postedItem;
-                break;
-            }
-            if (!array_key_exists('quantity', $postedItem) || $postedItem['quantity'] === 0 || !is_int((int)$postedItem['quantity'])) {
-                $anyInValidDataInPostedItems[] = $postedItem;
-                break;
-            }
-            $product = $products[$postedItem['product']];
-            if ($postedItem['quantity'] > $product['stock']) {
-                $outOfStockProducts[] = $product['name'];
-            }
-        }
-
-        if ($anyInValidDataInPostedItems) {
-            return ReplyUtils::failure(['message' => 'All items objects must contain product and quantity info. Please check it!']);
-        }
-
-        if ($outOfStockProducts) {
-            return ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $outOfStockProducts)]);
-        }
-
-
-        // After checking payload in posted data, Let's check if customer has a data in cache.
-        $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
-
-        // I will merge previous cached basket and new posted items in $itemsWillBeReCached variable below
-        $itemsWillBeReCached = [];
-
-        // There may be a customer cached basket. That is why, I check the data in cache.
-        // If so, I will merge the new basket data to cached file, else I will add it to basket as a new item
-
-        $alreadyAddedProducts = [];
-
-        if ($fetchBasketFromCache && array_key_exists('items', $fetchBasketFromCache)) {
-            // Get basket items in the cache
-            $cachedItems = $fetchBasketFromCache['items'];
-
-            // Compare the posted items and cached items to find the same products and increase the quantity and total of that product
-            foreach ($postedItems as $postedItem) {
-                $product = $products[$postedItem['product']];
-                foreach ($cachedItems as $key => $cachedItem) {
-                    if ($cachedItem['productId'] === $postedItem['product']) {
-
-                        // If product stock is exhausted, then remove that item
-                        if ($product['stock'] === 0) {
-                            unset($cachedItems[$key]);
-                            continue;
-                        }
-
-                        // Increase the quantity
-                        $newQuantity = $cachedItem['quantity'] + $postedItem['quantity'];
-
-                        // Let's check the new quantity again for stock. If stock is not enough, I will warn the customer.
-                        if ($newQuantity > $product['stock']) {
-                            $outOfStockProducts[] = $product['name'];
-
-                            // If products stock is less than new added quantity, check cached item quantity.
-                            // If it is also greater than product stock than new quantity will be available product stock
-                            $newQuantity = ($cachedItem['quantity'] < $product['stock']) ? $cachedItem['quantity'] : $product['stock'];
-                        }
-                        $alreadyAddedProducts[] = $postedItem['product'];
-                        $cachedItem['quantity'] = $newQuantity;
-                        // Unit price may be changed. So I get the unitPrice again from $product.
-                        $cachedItem['total'] = number_format($cachedItem['quantity'] * $product['price'], 2, '.', '');
-                        $itemsWillBeReCached[] = $cachedItem;
-                    }
-                }
-            }
-        }
-
-        $mergedBasketItems = array_merge($itemsWillBeReCached, $this->setPostedItemsWillBeReCached($postedItems, $alreadyAddedProducts, $products));
-
-        $message = "success";
-        if ($outOfStockProducts) {
-            $message = 'No more stock for ' . implode(',', $outOfStockProducts) . '. So I couldn\'t increase their quantities.';
-        }
-
-        $basketTotal = 0;
-        if ($mergedBasketItems) {
-            $basketTotal = $this->calculateBasketTotal($mergedBasketItems);
-        }
-
-        $cacheData = [
-            'items' => $mergedBasketItems,
-            'basketTotal' => $basketTotal,
-            'basketDiscountedTotal' => $basketTotal,
-            'discounts' => []
-        ];
-
-        // Let's start to calculate discounts
-        $discountResult = $this->calculateDiscount($products, $cacheData);
-
-        return ReplyUtils::success(['data' => $discountResult, 'message' => $message]);
-    }
-
-
-    /**
-     * @param array $products
-     * @param array $cacheData
-     * @return array
-     */
-    private function calculateDiscount(array $products, array $cacheData): array
-    {
-        // First, let's fetch all active, started and not expired discounts.
-        $now = new \DateTime();
-        $discountRepository = $this->em->getRepository(Discount::class);
-        $availableDiscounts = $discountRepository->fetchAvailableDiscounts(AbstractQuery::HYDRATE_OBJECT);
-
-        // If no available discount, return cache data own.
-        if (!$availableDiscounts) {
-            return $cacheData;
-        }
-        $discountedCacheData = [];
-        //dd($availableDiscounts);
-
-        foreach ($availableDiscounts as $discount) {
-
-            /**
-             * @var DiscountInterface $discountCalculator
-             */
-            $className = $discount->getDiscountClassName();
-            if (!$className) {
-                continue;
-            }
-
-            switch ($className) {
-                case 'PercentOverDiscount':
-                    $discountCalculator = new PercentOverDiscount();
-                    break;
-                case 'BuyNPayKDiscount':
-                    $discountCalculator = new BuyNPayKDiscount();
-                    break;
-                case 'BuyNDecreasePercentDiscount':
-                    $discountCalculator = new BuyNDecreasePercentDiscount();
-                    break;
-            }
-
-            $discountedCacheData = $discountCalculator->calculateDiscount($cacheData, $discount);
-        }
-
-        return $discountedCacheData;
-    }
 
     /**
      * @Route("/remove", name="remove", methods={"DELETE"})
@@ -442,7 +274,7 @@ class BasketController extends BaseController
                 $outOfStockProducts[] = $product['name'];
             }
             $item['unitPrice'] = $product['price'];
-            $item['total'] = $product['price'] * $item['quantity'];
+            $item['total'] = number_format($product['price'] * $item['quantity'], 2, ',', '');
         }
 
         $basketTotal = 0;
@@ -470,7 +302,7 @@ class BasketController extends BaseController
         if ($outOfStockProducts) {
             $message = implode(',', $outOfStockProducts) . ' are less than stock. So we changed the quantity of that product in your basket.';
         }
-        return $this->json(ReplyUtils::success(['data' => $cacheData, 'basketTotal' => $basketTotal, 'message' => $message]));
+        return $this->json(ReplyUtils::success(['data' => $cacheData, 'message' => $message]));
     }
 
     /**
@@ -488,12 +320,14 @@ class BasketController extends BaseController
                 continue;
             }
             $product = $products[$postedItem['product']];
+            $category = $product['category'];
             if ($product) {
+                $sub['categoryId'] = $category['id'];
                 $sub['productId'] = $product['id'];
                 $sub['name'] = $product['name'];
                 $sub['quantity'] = $postedItem['quantity'];
                 $sub['unitPrice'] = $product['price'];
-                $sub['total'] = $postedItem['quantity'] * $product['price'];
+                $sub['total'] = number_format($postedItem['quantity'] * $product['price'], 2, ',', '');
                 $itemsWillBeReCached[] = $sub;
             }
         }
@@ -510,8 +344,176 @@ class BasketController extends BaseController
     {
         $total = 0;
         foreach ($mergedBasketItems as $item) {
-            $total += $item['total'];
+            $total += (float)$item['total'];
         }
         return number_format($total, 2, '.', '');
+    }
+
+    /**
+     * @param array $products
+     * @param array $cacheData
+     * @return array
+     */
+    private function calculateDiscount(array $products, array $cacheData): array
+    {
+        // First, let's fetch all active, started and not expired discounts.
+        $now = new \DateTime();
+        $discountRepository = $this->em->getRepository(Discount::class);
+        $availableDiscounts = $discountRepository->fetchAvailableDiscounts(AbstractQuery::HYDRATE_OBJECT);
+
+        // If no available discount, return cache data own.
+        if (!$availableDiscounts) {
+            return $cacheData;
+        }
+        $discountedCacheData = [];
+        //dd($availableDiscounts);
+
+        foreach ($availableDiscounts as $discount) {
+
+            /**
+             * @var DiscountInterface $discountCalculator
+             */
+            $className = $discount->getDiscountClassName();
+            if (!$className) {
+                continue;
+            }
+
+            switch ($className) {
+                case 'PercentOverDiscount':
+                    $discountCalculator = new PercentOverDiscount();
+                    break;
+                case 'BuyNPayKDiscount':
+                    $discountCalculator = new BuyNPayKDiscount();
+                    break;
+                case 'BuyNDecreasePercentDiscount':
+                    $discountCalculator = new BuyNDecreasePercentDiscount();
+                    break;
+            }
+
+            $discountedCacheData = $discountCalculator->calculateDiscount($cacheData, $discount);
+        }
+
+        return $discountedCacheData;
+    }
+
+    /**
+     * @param array $postedData
+     * @return array
+     * @throws InvalidArgumentException
+     */
+    private function process(array $postedData): array
+    {
+        if (!$user = $this->getUser()) {
+            return ReplyUtils::failure(['message' => 'No user found!']);
+        }
+
+        // Creating a unique cache key for customer
+        $cacheKey = md5($user->getUserIdentifier());
+        $postedItems = $postedData['items'];
+
+        //Fetch all products details in basket at the same time not to get them from repo one by one
+        $productRepository = $this->em->getRepository(Product::class);
+        $products = $productRepository->fetchProductsByIds($postedData['productIds']);
+
+        // I will collect any invalid items or out of stock product in basket items into below variables while checking the data
+        $anyInValidDataInPostedItems = [];
+        $outOfStockProducts = [];
+
+        // Started to check postedItems if any missing parameter or any out of stock product
+        foreach ($postedItems as $postedItem) {
+            if (!array_key_exists('product', $postedItem) || !$postedItem['product']) {
+                $anyInValidDataInPostedItems[] = $postedItem;
+                break;
+            }
+            if (!array_key_exists('quantity', $postedItem) || $postedItem['quantity'] === 0 || !is_int((int)$postedItem['quantity'])) {
+                $anyInValidDataInPostedItems[] = $postedItem;
+                break;
+            }
+            $product = $products[$postedItem['product']];
+            if ($postedItem['quantity'] > $product['stock']) {
+                $outOfStockProducts[] = $product['name'];
+            }
+        }
+
+        if ($anyInValidDataInPostedItems) {
+            return ReplyUtils::failure(['message' => 'All items objects must contain product and quantity info. Please check it!']);
+        }
+
+        if ($outOfStockProducts) {
+            return ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $outOfStockProducts)]);
+        }
+
+
+        // After checking payload in posted data, Let's check if customer has a data in cache.
+        $fetchBasketFromCache = $this->cacheUtil->fetch($cacheKey);
+
+        // I will merge previous cached basket and new posted items in $itemsWillBeReCached variable below
+        $itemsWillBeReCached = [];
+
+        // There may be a customer cached basket. That is why, I check the data in cache.
+        // If so, I will merge the new basket data to cached file, else I will add it to basket as a new item
+
+        $alreadyAddedProducts = [];
+
+        if ($fetchBasketFromCache && array_key_exists('items', $fetchBasketFromCache)) {
+            // Get basket items in the cache
+            $cachedItems = $fetchBasketFromCache['items'];
+
+            // Compare the posted items and cached items to find the same products and increase the quantity and total of that product
+            foreach ($postedItems as $postedItem) {
+                $product = $products[$postedItem['product']];
+                foreach ($cachedItems as $key => $cachedItem) {
+                    if ($cachedItem['productId'] === $postedItem['product']) {
+
+                        // If product stock is exhausted, then remove that item
+                        if ($product['stock'] === 0) {
+                            unset($cachedItems[$key]);
+                            continue;
+                        }
+
+                        // Increase the quantity
+                        $newQuantity = $cachedItem['quantity'] + $postedItem['quantity'];
+
+                        // Let's check the new quantity again for stock. If stock is not enough, I will warn the customer.
+                        if ($newQuantity > $product['stock']) {
+                            $outOfStockProducts[] = $product['name'];
+
+                            // If products stock is less than new added quantity, check cached item quantity.
+                            // If it is also greater than product stock than new quantity will be available product stock
+                            $newQuantity = ($cachedItem['quantity'] < $product['stock']) ? $cachedItem['quantity'] : $product['stock'];
+                        }
+                        $alreadyAddedProducts[] = $postedItem['product'];
+                        $cachedItem['quantity'] = $newQuantity;
+                        // Unit price may be changed. So I get the unitPrice again from $product.
+                        $cachedItem['total'] = number_format($cachedItem['quantity'] * $product['price'], 2, '.', '');
+                        $itemsWillBeReCached[] = $cachedItem;
+                    }
+                }
+            }
+        }
+
+        $mergedBasketItems = array_merge($itemsWillBeReCached, $this->setPostedItemsWillBeReCached($postedItems, $alreadyAddedProducts, $products));
+
+        $message = "success";
+        if ($outOfStockProducts) {
+            $message = 'No more stock for ' . implode(',', $outOfStockProducts) . '. So I couldn\'t increase their quantities.';
+        }
+
+        $basketTotal = 0;
+        if ($mergedBasketItems) {
+            $basketTotal = $this->calculateBasketTotal($mergedBasketItems);
+        }
+
+        $cacheData = [
+            'items' => $mergedBasketItems,
+            'basketTotal' => $basketTotal,
+            'basketDiscountedTotal' => $basketTotal,
+            'discounts' => []
+        ];
+
+        // Let's start to calculate discounts
+        $discountResult = $this->calculateDiscount($products, $cacheData);
+
+        return ReplyUtils::success(['data' => $discountResult, 'message' => $message]);
     }
 }
