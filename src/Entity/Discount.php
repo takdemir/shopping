@@ -57,19 +57,19 @@ class Discount implements \JsonSerializable
     private bool $isActive;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTime $startAt = null;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTime $expireAt = null;
 
     /**
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="json", nullable=true)
      */
-    private ?array $parameters = [];
+    private array $parameters = [];
 
     public function __construct()
     {
