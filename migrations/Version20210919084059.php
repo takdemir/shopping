@@ -24,6 +24,12 @@ final class Version20210919084059 extends AbstractMigration
         $this->addSql('ALTER TABLE order_discount DROP FOREIGN KEY FK_1856BFE415FB15');
         $this->addSql('DROP INDEX IDX_1856BFE415FB15 ON order_discount');
         $this->addSql('ALTER TABLE order_discount DROP order_item_id');
+        $this->addSql('
+            INSERT INTO `discount` (`id`, `user_id`, `category_id`, `product_id`, `discount_code`, `discount_class_name`, `is_active`, `created_at`, `start_at`, `expire_at`, `parameters`) VALUES (NULL, NULL, NULL, NULL, "N_PERCENT_OVER_K", "PercentOverDiscount", 1, "2021-09-18 16:36:19", "2021-09-18 16:36:19", "2021-10-30 16:36:19", NULL);
+            INSERT INTO `discount` (`id`, `user_id`, `category_id`, `product_id`, `discount_code`, `discount_class_name`, `is_active`, `created_at`, `start_at`, `expire_at`, `parameters`) VALUES (NULL, NULL, 2, NULL, "BUY_N_GET_K", "BuyNPayKDiscount", 1, "2021-09-18 16:38:05", "2021-09-18 16:36:19", "2021-10-30 16:36:19", NULL);
+            INSERT INTO `discount` (`id`, `user_id`, `category_id`, `product_id`, `discount_code`, `discount_class_name`, `is_active`, `created_at`, `start_at`, `expire_at`, `parameters`) VALUES (NULL, NULL, 1, NULL, "BUY_N_DECREASE_PERCENT", "BuyNDecreasePercentDiscount", 1, "2021-09-18 16:39:09", "2021-09-18 16:36:19", "2021-10-30 16:36:19", "a:0:{}");
+        
+        ');
     }
 
     public function down(Schema $schema): void
