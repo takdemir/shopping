@@ -357,7 +357,6 @@ class BasketController extends BaseController
     private function calculateDiscount(array $products, array $cacheData): array
     {
         // First, let's fetch all active, started and not expired discounts.
-        $now = new \DateTime();
         $discountRepository = $this->em->getRepository(Discount::class);
         $availableDiscounts = $discountRepository->fetchAvailableDiscounts(AbstractQuery::HYDRATE_OBJECT);
 
@@ -365,7 +364,7 @@ class BasketController extends BaseController
         if (!$availableDiscounts) {
             return $cacheData;
         }
-        $discountedCacheData = [];
+
         //dd($availableDiscounts);
 
         foreach ($availableDiscounts as $discount) {
@@ -390,10 +389,10 @@ class BasketController extends BaseController
                     break;
             }
 
-            $discountedCacheData = $discountCalculator->calculateDiscount($cacheData, $discount);
+            $cacheData = $discountCalculator->calculateDiscount($cacheData, $discount);
         }
 
-        return $discountedCacheData;
+        return $cacheData;
     }
 
     /**

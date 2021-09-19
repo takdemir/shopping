@@ -4,9 +4,8 @@ namespace App\Service;
 
 use App\Entity\Discount;
 
-class BuyNDecreasePercentDiscount implements DiscountInterface
+class BuyNDecreasePercentDiscount extends AbstractDiscount
 {
-
     public function calculateDiscount(array $basketItems, Discount $discount): array
     {
         //If that discount is implemented before, don't implement again
@@ -14,8 +13,8 @@ class BuyNDecreasePercentDiscount implements DiscountInterface
             return $basketItems;
         }
         $discountedBasketItems = $basketItems['items'];
-        $basketTotal = $basketItems['basketTotal'];
-        $basketDiscountedTotal = $basketItems['basketDiscountedTotal'];
+        $basketTotal = (float)$basketItems['basketTotal'];
+        $basketDiscountedTotal = (float)$basketItems['basketDiscountedTotal'];
         $discountAmount = 0;
         $discountedTotal = 0;
 
@@ -42,18 +41,7 @@ class BuyNDecreasePercentDiscount implements DiscountInterface
             }
         }
 
-        return [
-            'items' => $discountedBasketItems,
-            'basketTotal' => $basketTotal,
-            'basketDiscountedTotal' => number_format($discountedTotal, 2, ',', ''),
-            'discounts' => array_merge($basketItems['discounts'], [
-                $discount->getDiscountCode() => [
-                    'discountReason' => $discount->getDiscountCode(),
-                    'discountAmount' => number_format($discountAmount, 2, ',', ''),
-                    'discountedTotal' => number_format($discountedTotal, 2, ',', ''),
-                ]
-            ])
-        ];
+        return $this->setReturnData($discountedBasketItems, $basketItems, $basketTotal, $discountedTotal, $discountAmount, $discount->getDiscountCode());
     }
 
     public function removeDiscount(array $basketItems)
