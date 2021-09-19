@@ -48,7 +48,7 @@ class AppCustomAuthenticator extends AbstractLoginFormAuthenticator
     public function supports(Request $request): bool
     {
 
-        $isAnonymousRoutes = ['security_login', 'security_logout', 'security_generate_token', 'api_v1_user_create_user'];
+        $isAnonymousRoutes = ['security_login', 'security_logout', 'security_generate_token', 'api_v1_user_create'];
 
         if (($request->isMethod('POST') || $request->isMethod('GET')) && in_array($request->attributes->get('_route'), $isAnonymousRoutes)) {
             return false;

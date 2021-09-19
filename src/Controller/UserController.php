@@ -17,7 +17,6 @@ use Nelmio\ApiDocBundle\Annotation\Security as AnnotationSecurity;
  * Class UserController
  * @package App\Controller
  * @Route("/api/v1/user", name="api_v1_user_", schemes={"https","http"})
- * @Security("is_granted('ROLE_USER')")
  */
 class UserController extends BaseController
 {
