@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Order;
+use App\Entity\OrderDiscount;
 use App\Entity\OrderItem;
 use App\Entity\Product;
 use App\Entity\User;
@@ -233,6 +234,9 @@ class OrderController extends BaseController
                 return $this->json(ReplyUtils::failure(['message' => 'No items in the basket!']));
             }
             $items = $fetchBasketItems['items'];
+            $discounts = $fetchBasketItems['discounts'];
+            $basketTotal = $fetchBasketItems['basketTotal'];
+            $basketDiscountedTotal = $fetchBasketItems['basketDiscountedTotal'];
             $userRepository = $this->em->getRepository(User::class);
             $productRepository = $this->em->getRepository(Product::class);
 
@@ -247,22 +251,16 @@ class OrderController extends BaseController
                 return $this->json(ReplyUtils::failure(['message' => 'Products in basket are not valid. Order creation failed!']));
             }
 
-            // I set new array which keys are productId. I fetch all products detail at one time from DB and I will get product info without loop
-            $rePreparedProducts = [];
-            foreach ($products as $product) {
-                $rePreparedProducts[$product->getId()] = $product;
-            }
-
             $total = 0;
             foreach ($items as $item) {
-                $product = $rePreparedProducts[$item['productId']];
+                $product = $products[$item['productId']];
                 if ($item['quantity'] > $product->getStock()) {
                     return $this->json(ReplyUtils::failure(['message' => 'No enough stock for ' . implode(',', $product['name'])]));
                 }
                 $orderItem = new OrderItem();
                 $orderItem->setIsActive(true);
                 $orderItem->setOrderId($order);
-                $orderItem->setProduct($rePreparedProducts[$item['productId']]);
+                $orderItem->setProduct($products[$item['productId']]);
                 $orderItem->setQuantity($item['quantity']);
                 $orderItem->setUnitPrice($item['unitPrice']);
                 $orderItem->setTotal($item['total']);
@@ -273,6 +271,21 @@ class OrderController extends BaseController
                 $leftStock = $product->getStock() - $item['quantity'];
                 $product->setStock($leftStock);
                 $this->em->persist($product);
+
+            }
+
+            // I insert the order discounts to order_discounts table
+            if ($discounts) {
+                foreach ($discounts as $discountCodeName => $discount) {
+                    $orderDiscount = new OrderDiscount();
+                    $orderDiscount->setOrderId($order);
+                    $orderDiscount->setOrderItem(null);
+                    $orderDiscount->setDiscountReason($discountCodeName);
+                    $orderDiscount->setDiscountAmount((float)$discount['discountAmount']);
+                    $orderDiscount->setTotalDiscount((float)$discount['discountAmount']);
+                    $orderDiscount->setDiscountedTotal((float)$discount['discountedTotal']);
+                    $this->em->persist($orderDiscount);
+                }
             }
             $order->setTotal($total);
             $order->setUser($userRepository->find($user->getId()));

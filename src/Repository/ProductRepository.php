@@ -77,7 +77,16 @@ class ProductRepository extends AbstractRepository
         // I set new array which keys are productId.
         $reArrangedProductsArray = [];
         foreach ($products as $product) {
-            $reArrangedProductsArray[$product['id']] = $product;
+            if (!is_array($product) && !is_object($product)) {
+                continue;
+            }
+            if (is_array($product)) {
+                $productId = $product['id'];
+            }
+            if (is_object($product)) {
+                $productId = $product->getId();
+            }
+            $reArrangedProductsArray[$productId] = $product;
         }
         return $reArrangedProductsArray;
     }
