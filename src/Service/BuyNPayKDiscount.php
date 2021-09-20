@@ -24,7 +24,7 @@ class BuyNPayKDiscount extends AbstractDiscount
         foreach ($basketItems['items'] as $item) {
             if (in_array($item['categoryId'], $parameters['categories']) || in_array($item['productId'], $parameters['products'])) {
                 if ($item['quantity'] === $parameters['buy']) {
-                    $discountAmount = $parameters['free'] * $item['unitPrice'];
+                    $discountAmount = $parameters['free'] * (float)$item['unitPrice'];
                     $discountedTotal = $basketDiscountedTotal - $discountAmount;
                 }
             }

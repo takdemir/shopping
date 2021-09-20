@@ -26,7 +26,7 @@ class BuyNDecreasePercentDiscount extends AbstractDiscount
             if (is_null($previousItem)) {
                 return $currentItem;
             }
-            if ($currentItem['total'] < $previousItem['total']) {
+            if ((float)$currentItem['total'] < (float)$previousItem['total']) {
                 return $currentItem;
             }
         });
