@@ -30,14 +30,20 @@ class BuyNDecreasePercentDiscount extends AbstractDiscount
             }
         });
 
+        $isAnyItemExist = 0;
         // Search in the items if category or product exist. If so, implement the related discount
         foreach ($basketItems['items'] as $item) {
             if (in_array($item['categoryId'], $parameters['categories']) || in_array($item['productId'], $parameters['products'])) {
                 if ($item['quantity'] >= $parameters['buy']) {
+                    $isAnyItemExist++;
                     $discountAmount = ($parameters['discountPercent'] / 100) * (float)$cheapestItem['total'];
                     $discountedTotal = $basketDiscountedTotal - $discountAmount;
                 }
             }
+        }
+
+        if ($isAnyItemExist === 0) {
+            return $basketItems;
         }
 
         return $this->setReturnData($discountedBasketItems, $basketItems, $basketTotal, $discountedTotal, $discountAmount, $discount->getDiscountCode());

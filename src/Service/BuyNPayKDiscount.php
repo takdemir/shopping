@@ -20,15 +20,20 @@ class BuyNPayKDiscount extends AbstractDiscount
         //TODO: get this parameters from DB
         $parameters = ['buy' => 6, 'pay' => 5, 'free' => 1, 'categories' => [2], 'products' => []];
 
+        $isAnyItemExist = 0;
+
         foreach ($basketItems['items'] as $item) {
             if (in_array($item['categoryId'], $parameters['categories']) || in_array($item['productId'], $parameters['products'])) {
                 if ($item['quantity'] === $parameters['buy']) {
+                    $isAnyItemExist++;
                     $discountAmount = $parameters['free'] * (float)$item['unitPrice'];
                     $discountedTotal = $basketDiscountedTotal - (float)$discountAmount;
                 }
             }
         }
-        //dd($basketDiscountedTotal);
+        if ($isAnyItemExist === 0) {
+            return $basketItems;
+        }
         return $this->setReturnData($discountedBasketItems, $basketItems, $basketTotal, $discountedTotal, $discountAmount, $discount->getDiscountCode());
     }
 

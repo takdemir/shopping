@@ -22,10 +22,11 @@ class PercentOverDiscount extends AbstractDiscount
         $parameters = ['basketTotalForDiscount' => 1000, 'discountPercent' => 10];
 
         // Because of another discount is implemented before that discount, I get $basketDiscountedTotal value to calculate
-        if ((float)$basketItems['basketTotal'] >= $parameters['basketTotalForDiscount']) {
-            $discountAmount = $basketDiscountedTotal * ($parameters['discountPercent'] / 100);
-            $discountedTotal = $basketDiscountedTotal - $discountAmount;
+        if ((float)$basketItems['basketTotal'] < $parameters['basketTotalForDiscount']) {
+            return $basketItems;
         }
+        $discountAmount = $basketDiscountedTotal * ($parameters['discountPercent'] / 100);
+        $discountedTotal = $basketDiscountedTotal - $discountAmount;
 
         return $this->setReturnData($discountedBasketItems, $basketItems, $basketTotal, $discountedTotal, $discountAmount, $discount->getDiscountCode());
     }
