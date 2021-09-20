@@ -174,6 +174,8 @@ class BasketController extends BaseController
             'discounts' => $fetchBasketFromCache['discounts']
         ];
 
+        //$discountResult = $this->calculateDiscount($cacheData);
+
         $cacheDropResult = $this->cacheUtil->drop($cacheKey);
         if (!$cacheDropResult) {
             return $this->json(ReplyUtils::failure(['data' => [], 'message' => 'An error has occurred while dropping the cache']));
@@ -289,7 +291,7 @@ class BasketController extends BaseController
             'discounts' => $fetchBasketFromCache['discounts']
         ];
 
-        $discountResult = $this->calculateDiscount($products, $cacheData);
+        $discountResult = $this->calculateDiscount($cacheData);
         if ($discountResult) {
             $cacheData = $discountResult;
         }
@@ -350,11 +352,10 @@ class BasketController extends BaseController
     }
 
     /**
-     * @param array $products
      * @param array $cacheData
      * @return array
      */
-    private function calculateDiscount(array $products, array $cacheData): array
+    private function calculateDiscount(array $cacheData): array
     {
         // First, let's fetch all active, started and not expired discounts.
         $discountRepository = $this->em->getRepository(Discount::class);
@@ -511,7 +512,7 @@ class BasketController extends BaseController
         ];
 
         // Let's start to calculate discounts
-        $discountResult = $this->calculateDiscount($products, $cacheData);
+        $discountResult = $this->calculateDiscount($cacheData);
 
         return ReplyUtils::success(['data' => $discountResult, 'message' => $message]);
     }
