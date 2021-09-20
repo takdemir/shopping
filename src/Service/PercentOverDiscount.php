@@ -8,9 +8,9 @@ class PercentOverDiscount extends AbstractDiscount
 {
     public function calculateDiscount(array $basketItems, Discount $discount): array
     {
-        //If that discount is implemented before, don't implement again
+        //If that discount is implemented before, remove it to calculate again
         if (array_key_exists($discount->getDiscountCode(), $basketItems['discounts'])) {
-            return $basketItems;
+            unset($basketItems['discounts'][$discount->getDiscountCode()]);
         }
         $discountedBasketItems = $basketItems['items'];
         $basketTotal = (float)$basketItems['basketTotal'];

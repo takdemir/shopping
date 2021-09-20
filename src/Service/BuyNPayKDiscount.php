@@ -8,15 +8,14 @@ class BuyNPayKDiscount extends AbstractDiscount
 {
     public function calculateDiscount(array $basketItems, Discount $discount): array
     {
-        //If that discount is implemented before, don't implement again
+        //If that discount is implemented before, remove it to calculate again
         if (array_key_exists($discount->getDiscountCode(), $basketItems['discounts'])) {
-            return $basketItems;
+            unset($basketItems['discounts'][$discount->getDiscountCode()]);
         }
         $discountedBasketItems = $basketItems['items'];
         $basketTotal = (float)$basketItems['basketTotal'];
-        $basketDiscountedTotal = (float)$basketItems['basketDiscountedTotal'];
+        $basketDiscountedTotal = $discountedTotal = (float)$basketItems['basketDiscountedTotal'];
         $discountAmount = 0;
-        $discountedTotal = 0;
 
         //TODO: get this parameters from DB
         $parameters = ['buy' => 6, 'pay' => 5, 'free' => 1, 'categories' => [2], 'products' => []];
@@ -25,11 +24,11 @@ class BuyNPayKDiscount extends AbstractDiscount
             if (in_array($item['categoryId'], $parameters['categories']) || in_array($item['productId'], $parameters['products'])) {
                 if ($item['quantity'] === $parameters['buy']) {
                     $discountAmount = $parameters['free'] * (float)$item['unitPrice'];
-                    $discountedTotal = $basketDiscountedTotal - $discountAmount;
+                    $discountedTotal = $basketDiscountedTotal - (float)$discountAmount;
                 }
             }
         }
-
+        //dd($basketDiscountedTotal);
         return $this->setReturnData($discountedBasketItems, $basketItems, $basketTotal, $discountedTotal, $discountAmount, $discount->getDiscountCode());
     }
 

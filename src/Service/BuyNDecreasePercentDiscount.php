@@ -8,15 +8,14 @@ class BuyNDecreasePercentDiscount extends AbstractDiscount
 {
     public function calculateDiscount(array $basketItems, Discount $discount): array
     {
-        //If that discount is implemented before, don't implement again
+        //If that discount is implemented before, remove it to calculate again
         if (array_key_exists($discount->getDiscountCode(), $basketItems['discounts'])) {
-            return $basketItems;
+            unset($basketItems['discounts'][$discount->getDiscountCode()]);
         }
         $discountedBasketItems = $basketItems['items'];
         $basketTotal = (float)$basketItems['basketTotal'];
-        $basketDiscountedTotal = (float)$basketItems['basketDiscountedTotal'];
+        $basketDiscountedTotal = $discountedTotal = (float)$basketItems['basketDiscountedTotal'];
         $discountAmount = 0;
-        $discountedTotal = 0;
 
         //TODO: get this parameters from DB
         $parameters = ['buy' => 2, 'discountPercent' => 20, 'categories' => [1], 'products' => []];

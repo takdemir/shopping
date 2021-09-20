@@ -174,7 +174,10 @@ class BasketController extends BaseController
             'discounts' => $fetchBasketFromCache['discounts']
         ];
 
-        //$discountResult = $this->calculateDiscount($cacheData);
+        $discountResult = $this->calculateDiscount($cacheData);
+        if ($discountResult) {
+            $cacheData = $discountResult;
+        }
 
         $cacheDropResult = $this->cacheUtil->drop($cacheKey);
         if (!$cacheDropResult) {
