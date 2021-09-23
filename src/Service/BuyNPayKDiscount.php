@@ -17,8 +17,11 @@ class BuyNPayKDiscount extends AbstractDiscount
         $basketDiscountedTotal = $discountedTotal = (float)$basketItems['basketDiscountedTotal'];
         $discountAmount = 0;
         $parameters = $this->prepareDiscountParameters($discount->getParameters());
-        $isAnyItemExist = 0;
+        if (!$parameters) {
+            return $basketItems;
+        }
 
+        $isAnyItemExist = 0;
         foreach ($basketItems['items'] as $item) {
             if (in_array($item['categoryId'], $parameters['categories']) || in_array($item['productId'], $parameters['products'])) {
                 if ($item['quantity'] === $parameters['buy']) {
@@ -50,7 +53,7 @@ class BuyNPayKDiscount extends AbstractDiscount
                     break;
                 case "products":
                 case "categories":
-                    $convertedParameters[$key] = json_decode($parameter,true);
+                    $convertedParameters[$key] = json_decode($parameter, true);
                     break;
             }
         }

@@ -16,6 +16,9 @@ class PercentOverDiscount extends AbstractDiscount
         $basketTotal = (float)$basketItems['basketTotal'];
         $basketDiscountedTotal = (float)$basketItems['basketDiscountedTotal'];
         $parameters = $this->prepareDiscountParameters($discount->getParameters());
+        if (!$parameters) {
+            return $basketItems;
+        }
 
         // Because of another discount is implemented before that discount, I get $basketDiscountedTotal value to calculate
         if ((float)$basketItems['basketTotal'] < $parameters['basketTotalForDiscount']) {

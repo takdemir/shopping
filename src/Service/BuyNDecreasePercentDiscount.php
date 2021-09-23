@@ -19,6 +19,10 @@ class BuyNDecreasePercentDiscount extends AbstractDiscount
 
         $parameters = $this->prepareDiscountParameters($discount->getParameters());
 
+        if (!$parameters) {
+            return $basketItems;
+        }
+
         // Find the cheapest item in the basket
         $cheapestItem = array_reduce($basketItems['items'], static function ($previousItem, $currentItem) {
             if (is_null($previousItem)) {
@@ -62,7 +66,7 @@ class BuyNDecreasePercentDiscount extends AbstractDiscount
                     break;
                 case "products":
                 case "categories":
-                    $convertedParameters[$key] = json_decode($parameter,true);
+                    $convertedParameters[$key] = json_decode($parameter, true);
                     break;
                 case "discountPercent":
                     $convertedParameters[$key] = (float)$parameter;

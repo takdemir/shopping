@@ -42,9 +42,10 @@ Check .env.local file and be sure, APP_ENV in the .env.local is dev</p>
     <pre>php bin/console doctrine:database:create</pre>
 </div>
 
-<p>8. Migration time. To create all tables and fill them with demo data, execute code below.</p>
+<p>8. Migration time. To create all tables and fill them with demo data, execute code below. Then you can exit from container</p>
 <div class="highlight highlight-source-shell position-relative">
     <pre>php bin/console doctrine:migration:migrate</pre>
+    <pre>exit</pre>
 </div>
 
 <h3> That is all :) Now, let's continue the other infos</h3>

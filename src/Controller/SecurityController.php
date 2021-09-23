@@ -75,6 +75,6 @@ class SecurityController extends AbstractController
         $payload = ['email' => $user->getEmail()];
         $jwtToken = JWT::encode($payload, $jwtSecretKey); // Expire time can be defined but not needed in that project
 
-        return $this->json(ReplyUtils::failure(['data' => $jwtToken, 'message' => 'success']));
+        return $this->json(ReplyUtils::success(['data' => $jwtToken, 'message' => 'success']));
     }
 }
