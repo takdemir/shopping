@@ -3,6 +3,7 @@
 namespace App\Form;
 
 use App\Entity\User;
+use App\Util\FormTypeUtils;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -21,47 +22,12 @@ class UserType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('email', EmailType::class, [
-                'required' => true,
-                'constraints' => [
-                    new Email(null, 'Not valid email')
-                ]
-            ])
-            ->add('roles', ChoiceType::class, [
-                'required' => false,
-                'choices' => User::ROLES,
-                'multiple' => true,
-                'invalid_message' => 'Must be one of ' . implode(',', User::ROLES)
-            ])
-            ->add('password', TextType::class, [
-                'required' => true,
-                'constraints' => [
-                    new Regex('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,}/',
-                        'Password must be min 8 characters and contain one uppercase, one lowercase, one digit and one character')
-                ]
-            ])
-            ->add('name', TextType::class, [
-                'required' => true,
-                'constraints' => [
-                    new Length(
-                        null,
-                        2,
-                        255,
-                        null,
-                        null,
-                        null,
-                        'Name must be 2 characters at least',
-                        'Name can be 255 characters max.')
-                ]
-            ])
+            ->add('email', EmailType::class, FormTypeUtils::emailTypeOptions())
+            ->add('roles', ChoiceType::class, FormTypeUtils::choiceTypeOptions(User::ROLES, false))
+            ->add('password', TextType::class, FormTypeUtils::passwordTypeOptions(true))
+            ->add('name', TextType::class, FormTypeUtils::textTypeOptions(2, 255))
             ->add('isActive', CheckboxType::class)
-            ->add('createdAt', DateTimeType::class, [
-                'required' => false,
-                'date_widget' => 'single_text',
-                'constraints' => [
-                    new GreaterThanOrEqual("today UTC", null, "Created date must be greater than or equal today")
-                ]
-            ]);
+            ->add('createdAt', DateTimeType::class, FormTypeUtils::dateTimeTypeOptions(false));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Category;
 use App\Entity\Product;
+use App\Util\FormTypeUtils;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -25,58 +26,16 @@ class ProductType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('name', TextType::class, [
-                'required' => true,
-                'constraints' => [
-                    new Length(
-                        null,
-                        2,
-                        255,
-                        null,
-                        null,
-                        null,
-                        'Name must be 2 characters at least',
-                        'Name can be 255 characters max.')
-                ]
-            ])
+            ->add('name', TextType::class, FormTypeUtils::textTypeOptions(2, 255))
             ->add('isActive', CheckboxType::class)
-            ->add('price', TextType::class, [
-                'required' => true,
-                'constraints' => [
-                    new Regex("/^[+-]?([0-9]*[.])?[0-9]+$/", "Price must be numeric and positive")
-                ]
-            ])
+            ->add('price', TextType::class, FormTypeUtils::textTypeRegexOption('Price', "/^[+-]?([0-9]*[.])?[0-9]+$/"))
             ->add('description', TextareaType::class, [
                 'required' => false
             ])
-            ->add('currency', ChoiceType::class, [
-                'required' => false,
-                'choices' => Product::CURRENCIES,
-                'invalid_message' => 'Currency must be one of ' . implode(',', Product::CURRENCIES)
-            ])
-            ->add('stock', TextType::class, [
-                'required' => true,
-                'constraints' => [
-                    new Regex("/^\d+$/", "Stock must be numeric and positive")
-                ],
-                'invalid_message' => 'Stock must be numeric and positive'
-            ])
-            ->add('createdAt', DateTimeType::class, [
-                'required' => false,
-                'date_widget' => 'single_text',
-                'constraints' => [
-                    new GreaterThanOrEqual("today UTC", null, "Created date must be greater than or equal today")
-                ]
-            ])
-            ->add('category', EntityType::class, [
-                'class' => Category::class,
-                'query_builder' => function (EntityRepository $er) {
-                    return $er->createQueryBuilder('u')
-                        ->orderBy('u.name', 'ASC');
-                },
-                'choice_label' => 'name',
-                'invalid_message' => 'Category is not valid'
-            ]);
+            ->add('currency', ChoiceType::class, FormTypeUtils::choiceTypeOptions(Product::CURRENCIES, true, false))
+            ->add('stock', TextType::class, FormTypeUtils::textTypeRegexOption('Price', "/^\d+$/"))
+            ->add('createdAt', DateTimeType::class, FormTypeUtils::dateTimeTypeOptions(false))
+            ->add('category', EntityType::class, FormTypeUtils::entityTypeOptions(Category::class));
 
 
         $builder->addEventListener(FormEvents::SUBMIT, static function (FormEvent $event) {

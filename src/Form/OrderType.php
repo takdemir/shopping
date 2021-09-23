@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Order;
 use App\Entity\User;
+use App\Util\FormTypeUtils;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -21,29 +22,9 @@ class OrderType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('total', TextType::class, [
-                'required' => true,
-                'constraints' => [
-                    new Regex("/^[+-]?([0-9]*[.])?[0-9]+$/", "Total must be numeric and positive")
-                ]
-            ])
-            ->add('createdAt', DateTimeType::class, [
-                'required' => false,
-                'date_widget' => 'single_text',
-                'constraints' => [
-                    new GreaterThanOrEqual("today UTC", null, "Created date must be greater than or equal today")
-                ]
-            ])
-            ->add('user', EntityType::class, [
-                'required' => true,
-                'class' => User::class,
-                'query_builder' => function (EntityRepository $er) {
-                    return $er->createQueryBuilder('u')
-                        ->orderBy('u.name', 'ASC');
-                },
-                'choice_label' => 'name',
-                'invalid_message' => 'User is not valid'
-            ]);
+            ->add('total', TextType::class, FormTypeUtils::textTypeRegexOption('Total', "/^[+-]?([0-9]*[.])?[0-9]+$/"))
+            ->add('createdAt', DateTimeType::class, FormTypeUtils::dateTimeTypeOptions(false))
+            ->add('user', EntityType::class, FormTypeUtils::entityTypeOptions(User::class));
     }
 
     public function configureOptions(OptionsResolver $resolver): void
