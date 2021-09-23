@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\UserRepository;
 use App\Util\CacheUtil;
+use App\Util\ReplyUtils;
 use Doctrine\ORM\EntityManagerInterface;
 
 trait BaseTrait
@@ -14,12 +15,38 @@ trait BaseTrait
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        UserRepository $userRepository,
-        CacheUtil $cacheUtil
-    ){
+        UserRepository         $userRepository,
+        CacheUtil              $cacheUtil
+    )
+    {
         $this->em = $entityManager;
         $this->userRepository = $userRepository;
         $this->cacheUtil = $cacheUtil;
+    }
+
+    /**
+     * @param string $contentType
+     * @param string $value
+     * @return bool
+     */
+    public function checkContentType(string $contentType, string $value = 'application/json'): bool
+    {
+        return $contentType !== $value;
+    }
+
+    /**
+     * @param int|null $userId
+     * @return array|void
+     */
+    public function checkUserAuthorisation(int $userId = null)
+    {
+        if (!$userDetail = $this->getUser()) {
+            return ReplyUtils::failure(['message' => 'No user found!']);
+        }
+
+        if ($userId && !$this->isGranted('ROLE_ADMIN') && $userId !== $userDetail->getId()) {
+            return ReplyUtils::failure(['message' => 'User is not authorised for that process!']);
+        }
     }
 
 }

@@ -15,8 +15,6 @@ class PercentOverDiscount extends AbstractDiscount
         $discountedBasketItems = $basketItems['items'];
         $basketTotal = (float)$basketItems['basketTotal'];
         $basketDiscountedTotal = (float)$basketItems['basketDiscountedTotal'];
-        $discountAmount = 0;
-        $discountedTotal = 0;
 
         //TODO: get this parameters from DB
         $parameters = ['basketTotalForDiscount' => 1000, 'discountPercent' => 10];

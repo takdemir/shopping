@@ -65,7 +65,7 @@ class UserRepository extends AbstractRepository implements PasswordUpgraderInter
      */
     public function findUserByUsernameAndPassword(string $username, string $password, string $hydration = AbstractQuery::HYDRATE_OBJECT): ?User
     {
-        $user = $this->commonJoin()
+        $user = $this->createQueryBuilder('p')
             ->where('p.email=:username')
             ->setParameter('username', $username)
             ->getQuery()

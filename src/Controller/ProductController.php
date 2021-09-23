@@ -6,6 +6,7 @@ use App\Entity\Product;
 use App\Form\ProductType;
 use App\Util\ReplyUtils;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -18,7 +19,7 @@ use Nelmio\ApiDocBundle\Annotation\Security as AnnotationSecurity;
  * @Route("/api/v1/product", name="api_v1_product_", schemes={"https","http"})
  * @Security("is_granted('ROLE_ADMIN')")
  */
-class ProductController extends BaseController
+class ProductController extends AbstractController
 {
     use BaseTrait;
 

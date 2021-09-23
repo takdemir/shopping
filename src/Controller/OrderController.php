@@ -10,8 +10,8 @@ use App\Entity\User;
 use App\Form\OrderType;
 use App\Util\ReplyUtils;
 use Doctrine\ORM\AbstractQuery;
-use Psr\Cache\InvalidArgumentException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -24,7 +24,7 @@ use Nelmio\ApiDocBundle\Annotation\Security as AnnotationSecurity;
  * @Route("/api/v1/order", name="api_v1_order_", schemes={"https","http"})
  * @Security("is_granted('ROLE_USER')")
  */
-class OrderController extends BaseController
+class OrderController extends AbstractController
 {
     use BaseTrait;
 

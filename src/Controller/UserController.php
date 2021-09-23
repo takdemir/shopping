@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\UserType;
 use App\Util\ReplyUtils;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -18,7 +18,7 @@ use Nelmio\ApiDocBundle\Annotation\Security as AnnotationSecurity;
  * @package App\Controller
  * @Route("/api/v1/user", name="api_v1_user_", schemes={"https","http"})
  */
-class UserController extends BaseController
+class UserController extends AbstractController
 {
     use BaseTrait;
 

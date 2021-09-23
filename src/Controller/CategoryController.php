@@ -6,6 +6,7 @@ use App\Entity\Category;
 use App\Form\CategoryType;
 use App\Util\ReplyUtils;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -18,7 +19,7 @@ use Nelmio\ApiDocBundle\Annotation\Security as AnnotationSecurity;
  * @Route("/api/v1/category", name="api_v1_category_", schemes={"https","http"})
  * @Security("is_granted('ROLE_ADMIN')")
  */
-class CategoryController extends BaseController
+class CategoryController extends AbstractController
 {
     use BaseTrait;
 

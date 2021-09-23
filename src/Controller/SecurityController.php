@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
 use App\Util\ReplyUtils;
 use Doctrine\ORM\NonUniqueResultException;
 use Firebase\JWT\JWT;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
  * Class SecurityController
  * @package App\Controller
  */
-class SecurityController extends BaseController
+class SecurityController extends AbstractController
 {
     use BaseTrait;
 

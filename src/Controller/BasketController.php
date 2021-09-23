@@ -11,6 +11,7 @@ use App\Service\BuyNPayKDiscount;
 use App\Util\ReplyUtils;
 use Doctrine\ORM\AbstractQuery;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -24,7 +25,7 @@ use Nelmio\ApiDocBundle\Annotation\Security as AnnotationSecurity;
  * @Route("/api/v1/basket", name="api_v1_basket_", schemes={"https","http"})
  * @Security("is_granted('ROLE_USER')")
  */
-class BasketController extends BaseController
+class BasketController extends AbstractController
 {
     use BaseTrait;
 
