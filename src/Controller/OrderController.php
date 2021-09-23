@@ -70,10 +70,6 @@ class OrderController extends AbstractController
             $user = (int)$query['customer'];
         }
 
-        if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
-            return $this->json($checkAuthorisation, 403);
-        }
-
         if (!$this->isGranted('ROLE_ADMIN')) {
             $user = $this->getUser()->getId();
         }
@@ -114,13 +110,10 @@ class OrderController extends AbstractController
      *
      * @OA\Tag(name="Order")
      * @AnnotationSecurity(name="Authorization")
+     * @Security("is_granted('ROLE_ADMIN') or order.getUser().getId() === user.getId()")
      */
     public function show(Order $order): JsonResponse
     {
-        if (($checkAuthorisation = $this->checkUserAuthorisation($order->getUser()->getId())) && !$checkAuthorisation['status']) {
-            return $this->json($checkAuthorisation, 403);
-        }
-
         return $this->json(ReplyUtils::success(['data' => $order, 'message' => 'success']));
     }
 
@@ -139,12 +132,10 @@ class OrderController extends AbstractController
      *
      * @OA\Tag(name="Order")
      * @AnnotationSecurity(name="Authorization")
+     * @Security("is_granted('ROLE_ADMIN') or order.getUser().getId() === user.getId()")
      */
     public function delete(Request $request, Order $order): JsonResponse
     {
-        if (($checkAuthorisation = $this->checkUserAuthorisation($order->getUser()->getId())) && !$checkAuthorisation['status']) {
-            return $this->json($checkAuthorisation, 403);
-        }
         if ($order->getIsActive() === false) {
             return $this->json(ReplyUtils::success(['message' => 'success']));
         }
@@ -341,10 +332,6 @@ class OrderController extends AbstractController
         $user = null;
         if (array_key_exists('customer', $query) && is_int((int)$query['customer'])) {
             $user = (int)$query['customer'];
-        }
-
-        if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
-            return $this->json($checkAuthorisation, 403);
         }
 
         if (!$this->isGranted('ROLE_ADMIN')) {

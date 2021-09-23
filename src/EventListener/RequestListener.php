@@ -14,8 +14,15 @@ class RequestListener
             return;
         }
 
+        $request = $event->getRequest();
+        $uri = $request->getRequestUri();
+
+        if (preg_match('/^\/api\/doc*/', $uri)) {
+            return;
+        }
+
         //Check the content type and if it is not application/json then return failure message
-        $contentType = $event->getRequest()->headers->get('Content-Type');
+        $contentType = $request->headers->get('Content-Type');
         if ($contentType !== 'application/json') {
             $response = new JsonResponse(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
             $event->setResponse($response);

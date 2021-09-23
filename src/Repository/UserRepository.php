@@ -122,7 +122,6 @@ class UserRepository extends AbstractRepository implements PasswordUpgraderInter
      * @param bool|null $activeOrders
      * @param string|int $hydrationMode
      * @return array
-     * @throws NonUniqueResultException
      */
     public function fetchCustomerOrdersByCustomerId(?int $userId, ?bool $activeOrders = null, string $hydrationMode = AbstractQuery::HYDRATE_ARRAY): array
     {
@@ -138,7 +137,7 @@ class UserRepository extends AbstractRepository implements PasswordUpgraderInter
             $userOrders->andWhere('orders.isActive=:isActive')->setParameter('isActive', $activeOrders);
         }
         return $userOrders->getQuery()
-            ->getOneOrNullResult($hydrationMode);
+            ->getResult($hydrationMode);
     }
 
 

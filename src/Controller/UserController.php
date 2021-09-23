@@ -5,11 +5,13 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\UserType;
 use App\Util\ReplyUtils;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\NonUniqueResultException;
 use OpenApi\Annotations as OA;
 use Nelmio\ApiDocBundle\Annotation\Security as AnnotationSecurity;
 
@@ -58,10 +60,6 @@ class UserController extends AbstractController
     public function list(Request $request): JsonResponse
     {
         $query = $request->query->all();
-
-        if (($checkAuthorisation = $this->checkUserAuthorisation()) && !$checkAuthorisation['status']) {
-            return $this->json($checkAuthorisation, 403);
-        }
 
         $user = null;
         if (!$this->isGranted('ROLE_ADMIN')) {
@@ -121,14 +119,11 @@ class UserController extends AbstractController
      *
      * @OA\Tag(name="User")
      * @AnnotationSecurity(name="Authorization")
+     * @Security("is_granted('ROLE_ADMIN') or userDetail.getId() === user.getId()")
      */
-    public function show(Request $request, User $user): JsonResponse
+    public function show(User $userDetail): JsonResponse
     {
-        if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
-            return $this->json($checkAuthorisation, 403);
-        }
-
-        return $this->json(ReplyUtils::success(['data' => $user, 'message' => 'success']));
+        return $this->json(ReplyUtils::success(['data' => $userDetail, 'message' => 'success']));
     }
 
 
@@ -263,13 +258,11 @@ class UserController extends AbstractController
      * )
      * @OA\Tag(name="User")
      * @AnnotationSecurity(name="Authorization")
+     * @Security("is_granted('ROLE_ADMIN') or userDetail.getId() === user.getId()")
      */
-    public function edit(Request $request, UserPasswordHasherInterface $userPasswordHasher, User $user, int $id): JsonResponse
+    public function edit(Request $request, UserPasswordHasherInterface $userPasswordHasher, User $userDetail, int $id): JsonResponse
     {
         try {
-            if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
-                return $this->json($checkAuthorisation, 403);
-            }
 
             $postedData = json_decode($request->getContent(), true);
 
@@ -278,7 +271,7 @@ class UserController extends AbstractController
                 return $this->json(ReplyUtils::failure(['message' => 'This email is already exist!']));
             }
 
-            $form = $this->createForm(UserType::class, $user);
+            $form = $this->createForm(UserType::class, $userDetail);
             $form->submit($postedData);
             $form->handleRequest($request);
 
@@ -286,12 +279,12 @@ class UserController extends AbstractController
                 return $this->json(ReplyUtils::failure(['message' => $errors]));
             }
 
-            $user->setPassword($userPasswordHasher->hashPassword($user, $postedData['password']));
-            $user->setRoles($postedData['roles']);
-            $this->em->persist($user);
+            $userDetail->setPassword($userPasswordHasher->hashPassword($userDetail, $postedData['password']));
+            $userDetail->setRoles($postedData['roles']);
+            $this->em->persist($userDetail);
             $this->em->flush();
 
-            return $this->json(ReplyUtils::success(['data' => $user->getId(), 'message' => 'success']));
+            return $this->json(ReplyUtils::success(['data' => $userDetail->getId(), 'message' => 'success']));
 
         } catch (\Exception $exception) {
             //TODO: Log
@@ -300,7 +293,6 @@ class UserController extends AbstractController
     }
 
     /**
-     * @param Request $request
      * @param int $userId
      * @return JsonResponse|void
      * @Route("/orders/{userId<^\d+$>}", name="fetch_user_orders", methods={"GET"})
@@ -315,26 +307,16 @@ class UserController extends AbstractController
      * )
      * @OA\Tag(name="User")
      * @AnnotationSecurity(name="Authorization")
+     * @Security("is_granted('ROLE_ADMIN') or userId === user.getId()")
      */
-    public function fetchUserOrders(Request $request, int $userId): JsonResponse
+    public function fetchCustomerOrders(int $userId): JsonResponse
     {
-        try {
-            if (($checkAuthorisation = $this->checkUserAuthorisation($userId)) && !$checkAuthorisation['status']) {
-                return $this->json($checkAuthorisation, 403);
-            }
+        $userOrders = $this->userRepository->fetchCustomerOrdersByCustomerId($userId, true);
 
-            $userOrders = $this->userRepository->fetchCustomerOrdersByCustomerId($userId, true);
-
-            return $this->json(ReplyUtils::success(['data' => $userOrders, 'message' => 'success']));
-
-        } catch (\Exception $exception) {
-            //TODO: Log
-            return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
-        }
+        return $this->json(ReplyUtils::success(['data' => $userOrders, 'message' => 'success']));
     }
 
     /**
-     * @param Request $request
      * @param int $userId
      * @return JsonResponse|void
      * @Route("/revenue/{userId<^\d+$>}", name="fetch_user_orders_revenue", methods={"GET"})
@@ -349,26 +331,16 @@ class UserController extends AbstractController
      * )
      * @OA\Tag(name="User")
      * @AnnotationSecurity(name="Authorization")
+     * @Security("is_granted('ROLE_ADMIN') or userId === user.getId()")
+     * @throws NonUniqueResultException
      */
-    public function fetchUserOrdersRevenue(Request $request, int $userId): JsonResponse
+    public function fetchCustomerOrdersRevenue(int $userId): JsonResponse
     {
-        try {
-            if (($checkAuthorisation = $this->checkUserAuthorisation($userId)) && !$checkAuthorisation['status']) {
-                return $this->json($checkAuthorisation, 403);
-            }
-
-            $userOrdersRevenue = $this->userRepository->fetchCustomerOrdersRevenueByCustomerId($userId, true);
-
-            return $this->json(ReplyUtils::success(['data' => $userOrdersRevenue, 'message' => 'success']));
-
-        } catch (\Exception $exception) {
-            //TODO: Log
-            return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
-        }
+        $userOrdersRevenue = $this->userRepository->fetchCustomerOrdersRevenueByCustomerId($userId, true);
+        return $this->json(ReplyUtils::success(['data' => $userOrdersRevenue, 'message' => 'success']));
     }
 
     /**
-     * @param Request $request
      * @return JsonResponse|void
      * @Route("/orders", name="fetch_users_orders", methods={"GET"})
      * @OA\Response (
@@ -382,27 +354,15 @@ class UserController extends AbstractController
      * )
      * @OA\Tag(name="User")
      * @AnnotationSecurity(name="Authorization")
+     * @Security("is_granted('ROLE_ADMIN')")
      */
-    public function fetchUsersOrders(Request $request): JsonResponse
+    public function fetchCustomersOrders(): JsonResponse
     {
-        try {
-            $userId = $this->getUser()->getId();
-            if ($this->isGranted('ROLE_ADMIN')) {
-                $userId = null;
-            }
-
-            $userOrders = $this->userRepository->fetchCustomerOrdersByCustomerId($userId, true);
-
-            return $this->json(ReplyUtils::success(['data' => $userOrders, 'message' => 'success']));
-
-        } catch (\Exception $exception) {
-            //TODO: Log
-            return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
-        }
+        $userOrders = $this->userRepository->fetchCustomerOrdersByCustomerId(null, true);
+        return $this->json(ReplyUtils::success(['data' => $userOrders, 'message' => 'success']));
     }
 
     /**
-     * @param Request $request
      * @return JsonResponse|void
      * @Route("/revenues", name="fetch_users_orders_revenue", methods={"GET"})
      * @OA\Response (
@@ -416,22 +376,11 @@ class UserController extends AbstractController
      * )
      * @OA\Tag(name="User")
      * @AnnotationSecurity(name="Authorization")
+     * @Security("is_granted('ROLE_ADMIN')")
      */
-    public function fetchUsersOrdersRevenue(Request $request): JsonResponse
+    public function fetchUsersOrdersRevenue(): JsonResponse
     {
-        try {
-            $userId = $this->getUser()->getId();
-            if ($this->isGranted('ROLE_ADMIN')) {
-                $userId = null;
-            }
-
-            $userOrdersRevenue = $this->userRepository->fetchCustomerOrdersRevenues($userId, true);
-
-            return $this->json(ReplyUtils::success(['data' => $userOrdersRevenue, 'message' => 'success']));
-
-        } catch (\Exception $exception) {
-            //TODO: Log
-            return $this->json(ReplyUtils::failure(['message' => $exception->getMessage()]), 500);
-        }
+        $userOrdersRevenue = $this->userRepository->fetchCustomerOrdersRevenues(null, true);
+        return $this->json(ReplyUtils::success(['data' => $userOrdersRevenue, 'message' => 'success']));
     }
 }
