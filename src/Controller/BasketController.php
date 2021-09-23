@@ -71,10 +71,6 @@ class BasketController extends AbstractController
      */
     public function add(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         $postedData = json_decode($request->getContent(), true);
 
         if (!$user = $this->getUser()) {
@@ -139,10 +135,6 @@ class BasketController extends AbstractController
      */
     public function remove(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         $query = $request->query->all();
 
         if (!$user = $this->getUser()) {
@@ -210,9 +202,6 @@ class BasketController extends AbstractController
      */
     public function empty(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
         if (!$user = $this->getUser()) {
             return $this->json(ReplyUtils::failure(['message' => 'No user found!']), 403);
         }
@@ -242,10 +231,6 @@ class BasketController extends AbstractController
      */
     public function list(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         if (!$user = $this->getUser()) {
             return $this->json(ReplyUtils::failure(['message' => 'No user found!']), 403);
         }

@@ -64,10 +64,6 @@ class CategoryController extends AbstractController
      */
     public function list(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         $query = $request->query->all();
 
         $name = null;
@@ -118,12 +114,8 @@ class CategoryController extends AbstractController
      * @OA\Tag(name="Category")
      * @AnnotationSecurity(name="Authorization")
      */
-    public function show(Request $request, Category $category): JsonResponse
+    public function show(Category $category): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         return $this->json(ReplyUtils::success(['data' => $category, 'message' => 'success']));
     }
 
@@ -160,9 +152,6 @@ class CategoryController extends AbstractController
     public function create(Request $request): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
 
             $postedData = json_decode($request->getContent(), true);
 
@@ -222,10 +211,6 @@ class CategoryController extends AbstractController
     public function edit(Request $request, Category $category): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             $postedData = json_decode($request->getContent(), true);
 
             $form = $this->createForm(CategoryType::class, $category);

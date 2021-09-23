@@ -57,10 +57,6 @@ class UserController extends AbstractController
      */
     public function list(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         $query = $request->query->all();
 
         if (($checkAuthorisation = $this->checkUserAuthorisation()) && !$checkAuthorisation['status']) {
@@ -128,10 +124,6 @@ class UserController extends AbstractController
      */
     public function show(Request $request, User $user): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
             return $this->json($checkAuthorisation, 403);
         }
@@ -188,10 +180,6 @@ class UserController extends AbstractController
     public function create(Request $request, UserPasswordHasherInterface $userPasswordHasher): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             $postedData = json_decode($request->getContent(), true);
 
             $isUserExistWithThatEmail = $this->userRepository->findOneBy(['email' => $postedData['email']]);
@@ -279,10 +267,6 @@ class UserController extends AbstractController
     public function edit(Request $request, UserPasswordHasherInterface $userPasswordHasher, User $user, int $id): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             if (($checkAuthorisation = $this->checkUserAuthorisation($this->getUser()->getId())) && !$checkAuthorisation['status']) {
                 return $this->json($checkAuthorisation, 403);
             }
@@ -335,10 +319,6 @@ class UserController extends AbstractController
     public function fetchUserOrders(Request $request, int $userId): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             if (($checkAuthorisation = $this->checkUserAuthorisation($userId)) && !$checkAuthorisation['status']) {
                 return $this->json($checkAuthorisation, 403);
             }
@@ -373,10 +353,6 @@ class UserController extends AbstractController
     public function fetchUserOrdersRevenue(Request $request, int $userId): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             if (($checkAuthorisation = $this->checkUserAuthorisation($userId)) && !$checkAuthorisation['status']) {
                 return $this->json($checkAuthorisation, 403);
             }
@@ -410,10 +386,6 @@ class UserController extends AbstractController
     public function fetchUsersOrders(Request $request): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             $userId = $this->getUser()->getId();
             if ($this->isGranted('ROLE_ADMIN')) {
                 $userId = null;
@@ -448,10 +420,6 @@ class UserController extends AbstractController
     public function fetchUsersOrdersRevenue(Request $request): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             $userId = $this->getUser()->getId();
             if ($this->isGranted('ROLE_ADMIN')) {
                 $userId = null;

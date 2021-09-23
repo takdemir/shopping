@@ -25,16 +25,6 @@ trait BaseTrait
     }
 
     /**
-     * @param string $contentType
-     * @param string $value
-     * @return bool
-     */
-    public function checkContentType(string $contentType, string $value = 'application/json'): bool
-    {
-        return $contentType !== $value;
-    }
-
-    /**
      * @param int|null $userId
      * @return array|void
      */

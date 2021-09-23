@@ -82,10 +82,6 @@ class DiscountController extends AbstractController
      */
     public function list(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         $query = $request->query->all();
 
         $user = null;
@@ -154,12 +150,8 @@ class DiscountController extends AbstractController
      * @OA\Tag(name="Discount")
      * @AnnotationSecurity(name="Authorization")
      */
-    public function show(Request $request, Discount $discount): JsonResponse
+    public function show(Discount $discount): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         return $this->json(ReplyUtils::success(['data' => $discount, 'message' => 'success']));
     }
 
@@ -231,10 +223,6 @@ class DiscountController extends AbstractController
     public function create(Request $request): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             $postedData = json_decode($request->getContent(), true);
 
             $discount = new Discount();
@@ -330,10 +318,6 @@ class DiscountController extends AbstractController
     public function edit(Request $request, Discount $discount): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             $postedData = json_decode($request->getContent(), true);
 
             $form = $this->createForm(DiscountType::class, $discount);

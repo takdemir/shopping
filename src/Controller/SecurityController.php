@@ -47,9 +47,6 @@ class SecurityController extends AbstractController
      */
     public function generateNewToken(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
 
         $postedData = json_decode($request->getContent(), true);
 

@@ -76,10 +76,6 @@ class ProductController extends AbstractController
      */
     public function list(Request $request): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         $query = $request->query->all();
 
         $category = null;
@@ -141,12 +137,8 @@ class ProductController extends AbstractController
      * @OA\Tag(name="Product")
      * @AnnotationSecurity(name="Authorization")
      */
-    public function show(Request $request, Product $product): JsonResponse
+    public function show(Product $product): JsonResponse
     {
-        if (!$this->checkContentType($request->headers->get('content-type'))) {
-            return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-        }
-
         return $this->json(ReplyUtils::success(['data' => $product, 'message' => 'success']));
     }
 
@@ -213,12 +205,7 @@ class ProductController extends AbstractController
     public function create(Request $request): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             $postedData = json_decode($request->getContent(), true);
-
             $product = new Product();
             $form = $this->createForm(ProductType::class, $product);
             $form->submit($postedData);
@@ -306,10 +293,6 @@ class ProductController extends AbstractController
     public function edit(Request $request, Product $product): JsonResponse
     {
         try {
-            if (!$this->checkContentType($request->headers->get('content-type'))) {
-                return $this->json(ReplyUtils::failure(['message' => 'Content-type must be application/json!']));
-            }
-
             $postedData = json_decode($request->getContent(), true);
 
             $form = $this->createForm(ProductType::class, $product);
