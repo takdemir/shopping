@@ -357,32 +357,47 @@ class BasketController extends AbstractController
 
         //dd($availableDiscounts);
 
+        /**
+         * @var Discount $discount
+         */
         foreach ($availableDiscounts as $discount) {
 
             /**
              * @var DiscountInterface $discountCalculator
              */
-            $className = $discount->getDiscountClassName();
-            if (!$className) {
+            $discountCode = $discount->getDiscountCode();
+            if (!$discountCode) {
                 continue;
             }
+            $discountCalculator = $this->discountFactory($discountCode);
 
-            switch ($className) {
-                case 'PercentOverDiscount':
-                    $discountCalculator = new PercentOverDiscount();
-                    break;
-                case 'BuyNPayKDiscount':
-                    $discountCalculator = new BuyNPayKDiscount();
-                    break;
-                case 'BuyNDecreasePercentDiscount':
-                    $discountCalculator = new BuyNDecreasePercentDiscount();
-                    break;
+            if (!$discountCalculator) {
+                continue;
             }
 
             $cacheData = $discountCalculator->calculateDiscount($cacheData, $discount);
         }
 
         return $cacheData;
+    }
+
+
+    /**
+     * @param string $discountCode
+     * @return DiscountInterface|null
+     */
+    private function discountFactory(string $discountCode): ?DiscountInterface
+    {
+        switch ($discountCode) {
+            case 'N_PERCENT_OVER_K':
+                return new PercentOverDiscount();
+            case 'BUY_N_GET_K':
+                return new BuyNPayKDiscount();
+            case 'BUY_N_DECREASE_PERCENT':
+                return new BuyNDecreasePercentDiscount();
+            default:
+                return null;
+        }
     }
 
     /**
