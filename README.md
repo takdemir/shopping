@@ -37,13 +37,7 @@ Check .env.local file and be sure, APP_ENV in the .env.local is dev</p>
     <pre>cp .env .env.local</pre>
 </div>
 
-<p>7. Create database
-<br />
-<u>VERY IMPORTANT!</u>
-<br/>
-If you want to execute DB processes in the <u>docker container</u>, please modify DATABASE_URL in .env.local.
-Other DATABASE_URL is already written in the same file. 
-</p>
+<p>7. Create database</p>
 <div class="highlight highlight-source-shell position-relative">
     <pre>php bin/console doctrine:database:create</pre>
 </div>
@@ -53,24 +47,29 @@ Other DATABASE_URL is already written in the same file.
     <pre>php bin/console doctrine:migration:migrate</pre>
 </div>
 
+<h3> That is all :) Now, let's continue the other infos</h3>
 
-<p>9. UserController test is written to be an example. 
+<p>1. UserController test is written to be an example. 
 You can execute it by code below</p>
 <div class="highlight highlight-source-shell position-relative">
     <pre>php bin/phpunit --testdox</pre>
 </div>
 
 
-<p>10. You can find API DOC link below</p>
+<p>2. You can find API DOC link below</p>
 <div class="highlight highlight-source-shell position-relative">
     <pre>http://localhost:9041/api/doc</pre>
 </div>
 
-<p>11. You can find Shopping.postman_collection.json for api in the root of the project</p>
-<p>12. In API Requests, your content-type must be application/json and x-api-token must be your 
+<p>3. You can find Shopping.postman_collection.json for api in the root of the project</p>
+<p>4. In API Requests;</p>
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;a . your content-type must be application/json and x-api-token must be your 
 generated token in te header. 
-<br/>
-You can generate x-api-token from http://localhost:9041/auth/generate-token with
+</p>
+
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;b. You can generate x-api-token from http://localhost:9041/auth/generate-token with
 <br/>
 method: post
 {
