@@ -6,8 +6,17 @@ use App\Entity\Discount;
 
 interface DiscountInterface
 {
+    /**
+     * @param array $basketItems
+     * @param Discount $discount
+     * @return array
+     * @description Calculates the discounts of items in basket
+     */
     public function calculateDiscount(array $basketItems, Discount $discount): array;
 
-    public function removeDiscount(array $basketItems);
-
+    /**
+     * @param array $parameters
+     * @return array
+     */
+    public function prepareDiscountParameters(array $parameters): array;
 }

@@ -17,8 +17,7 @@ class BuyNDecreasePercentDiscount extends AbstractDiscount
         $basketDiscountedTotal = $discountedTotal = (float)$basketItems['basketDiscountedTotal'];
         $discountAmount = 0;
 
-        //TODO: get this parameters from DB
-        $parameters = ['buy' => 2, 'discountPercent' => 20, 'categories' => [1], 'products' => []];
+        $parameters = $this->prepareDiscountParameters($discount->getParameters());
 
         // Find the cheapest item in the basket
         $cheapestItem = array_reduce($basketItems['items'], static function ($previousItem, $currentItem) {
@@ -49,8 +48,27 @@ class BuyNDecreasePercentDiscount extends AbstractDiscount
         return $this->setReturnData($discountedBasketItems, $basketItems, $basketTotal, $discountedTotal, $discountAmount, $discount->getDiscountCode());
     }
 
-    public function removeDiscount(array $basketItems)
+    /**
+     * @param array $parameters
+     * @return array
+     */
+    public function prepareDiscountParameters(array $parameters): array
     {
-        // TODO: Implement removeDiscount() method.
+        $convertedParameters = [];
+        foreach ($parameters as $key => $parameter) {
+            switch ($key) {
+                case "buy":
+                    $convertedParameters[$key] = (int)$parameter;
+                    break;
+                case "products":
+                case "categories":
+                    $convertedParameters[$key] = json_decode($parameter,true);
+                    break;
+                case "discountPercent":
+                    $convertedParameters[$key] = (float)$parameter;
+                    break;
+            }
+        }
+        return $convertedParameters;
     }
 }

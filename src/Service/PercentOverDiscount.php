@@ -15,9 +15,7 @@ class PercentOverDiscount extends AbstractDiscount
         $discountedBasketItems = $basketItems['items'];
         $basketTotal = (float)$basketItems['basketTotal'];
         $basketDiscountedTotal = (float)$basketItems['basketDiscountedTotal'];
-
-        //TODO: get this parameters from DB
-        $parameters = ['basketTotalForDiscount' => 1000, 'discountPercent' => 10];
+        $parameters = $this->prepareDiscountParameters($discount->getParameters());
 
         // Because of another discount is implemented before that discount, I get $basketDiscountedTotal value to calculate
         if ((float)$basketItems['basketTotal'] < $parameters['basketTotalForDiscount']) {
@@ -29,8 +27,21 @@ class PercentOverDiscount extends AbstractDiscount
         return $this->setReturnData($discountedBasketItems, $basketItems, $basketTotal, $discountedTotal, $discountAmount, $discount->getDiscountCode());
     }
 
-    public function removeDiscount(array $basketItems)
+    /**
+     * @param array $parameters
+     * @return array
+     */
+    public function prepareDiscountParameters(array $parameters): array
     {
-        // TODO: Implement removeDiscount() method.
+        $convertedParameters = [];
+        foreach ($parameters as $key => $parameter) {
+            switch ($key) {
+                case "basketTotalForDiscount":
+                case "discountPercent":
+                    $convertedParameters[$key] = (float)$parameter;
+                    break;
+            }
+        }
+        return $convertedParameters;
     }
 }

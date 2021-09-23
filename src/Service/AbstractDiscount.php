@@ -25,12 +25,12 @@ abstract class AbstractDiscount implements DiscountInterface
         return [
             'items' => $discountedBasketItems,
             'basketTotal' => $basketTotal,
-            'basketDiscountedTotal' => number_format($discountedTotal, 2, ',', ''),
+            'basketDiscountedTotal' => $discountedTotal,
             'discounts' => array_merge($basketItems['discounts'], [
                 $discountCode => [
                     'discountReason' => $discountCode,
-                    'discountAmount' => number_format($discountAmount, 2, ',', ''),
-                    'discountedTotal' => number_format($discountedTotal, 2, ',', ''),
+                    'discountAmount' => $discountAmount,
+                    'discountedTotal' => $discountedTotal,
                 ]
             ])
         ];

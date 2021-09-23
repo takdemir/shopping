@@ -15,6 +15,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Psr\Cache\InvalidArgumentException;
 use OpenApi\Annotations as OA;
 use Nelmio\ApiDocBundle\Annotation\Security as AnnotationSecurity;
 
@@ -185,6 +186,7 @@ class OrderController extends AbstractController
      * )
      * @OA\Tag(name="Order")
      * @AnnotationSecurity(name="Authorization")
+     * @throws InvalidArgumentException
      */
     public function create(Request $request): JsonResponse
     {

@@ -265,25 +265,16 @@ class BasketController extends AbstractController
                 $outOfStockProducts[] = $product['name'];
             }
             $item['unitPrice'] = $product['price'];
-            $item['total'] = number_format($product['price'] * $item['quantity'], 2, ',', '');
+            $item['total'] = $product['price'] * $item['quantity'];
         }
 
-        $basketTotal = 0;
-        if ($fetchBasketFromCache) {
-            $basketTotal = $this->calculateBasketTotal($items);
-        }
-
+        $basketTotal = $this->calculateBasketTotal($items);
         $cacheData = [
             'items' => $items,
             'basketTotal' => $basketTotal,
             'basketDiscountedTotal' => $fetchBasketFromCache['basketDiscountedTotal'],
             'discounts' => $fetchBasketFromCache['discounts']
         ];
-
-        $discountResult = $this->calculateDiscount($cacheData);
-        if ($discountResult) {
-            $cacheData = $discountResult;
-        }
 
         // I cache basket items again after changes
         $this->cacheUtil->drop($cacheKey);
@@ -318,7 +309,7 @@ class BasketController extends AbstractController
                 $sub['name'] = $product['name'];
                 $sub['quantity'] = $postedItem['quantity'];
                 $sub['unitPrice'] = $product['price'];
-                $sub['total'] = number_format($postedItem['quantity'] * $product['price'], 2, ',', '');
+                $sub['total'] = $postedItem['quantity'] * $product['price'];
                 $itemsWillBeReCached[] = $sub;
             }
         }
@@ -337,7 +328,7 @@ class BasketController extends AbstractController
         foreach ($mergedBasketItems as $item) {
             $total += (float)$item['total'];
         }
-        return number_format($total, 2, '.', '');
+        return $total;
     }
 
     /**
@@ -489,7 +480,7 @@ class BasketController extends AbstractController
                         $alreadyAddedProducts[] = $postedItem['product'];
                         $cachedItem['quantity'] = $newQuantity;
                         // Unit price may be changed. So I get the unitPrice again from $product.
-                        $cachedItem['total'] = number_format($cachedItem['quantity'] * $product['price'], 2, '.', '');
+                        $cachedItem['total'] = $cachedItem['quantity'] * $product['price'];
                         $itemsWillBeReCached[] = $cachedItem;
                     }
                 }

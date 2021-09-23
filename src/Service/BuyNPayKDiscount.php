@@ -16,17 +16,14 @@ class BuyNPayKDiscount extends AbstractDiscount
         $basketTotal = (float)$basketItems['basketTotal'];
         $basketDiscountedTotal = $discountedTotal = (float)$basketItems['basketDiscountedTotal'];
         $discountAmount = 0;
-
-        //TODO: get this parameters from DB
-        $parameters = ['buy' => 6, 'pay' => 5, 'free' => 1, 'categories' => [2], 'products' => []];
-
+        $parameters = $this->prepareDiscountParameters($discount->getParameters());
         $isAnyItemExist = 0;
 
         foreach ($basketItems['items'] as $item) {
             if (in_array($item['categoryId'], $parameters['categories']) || in_array($item['productId'], $parameters['products'])) {
                 if ($item['quantity'] === $parameters['buy']) {
                     $isAnyItemExist++;
-                    $discountAmount = $parameters['free'] * (float)$item['unitPrice'];
+                    $discountAmount = (int)$parameters['free'] * (float)$item['unitPrice'];
                     $discountedTotal = $basketDiscountedTotal - (float)$discountAmount;
                 }
             }
@@ -37,8 +34,26 @@ class BuyNPayKDiscount extends AbstractDiscount
         return $this->setReturnData($discountedBasketItems, $basketItems, $basketTotal, $discountedTotal, $discountAmount, $discount->getDiscountCode());
     }
 
-    public function removeDiscount(array $basketItems)
+    /**
+     * @param array $parameters
+     * @return array
+     */
+    public function prepareDiscountParameters(array $parameters): array
     {
-        // TODO: Implement removeDiscount() method.
+        $convertedParameters = [];
+        foreach ($parameters as $key => $parameter) {
+            switch ($key) {
+                case "buy":
+                case "free":
+                case "pay":
+                    $convertedParameters[$key] = (int)$parameter;
+                    break;
+                case "products":
+                case "categories":
+                    $convertedParameters[$key] = json_decode($parameter,true);
+                    break;
+            }
+        }
+        return $convertedParameters;
     }
 }
