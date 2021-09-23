@@ -7,9 +7,19 @@
 	"item": [
 		{
 			"name": "security/generate-token",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "ab",
+						"type": "text",
+						"disabled": true
+					}
+				],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n    \"email\": \"taneryzb@hotmail.com\",\n    \"password\": \"Abcde123*\"\n}",
@@ -89,7 +99,7 @@
 					}
 				},
 				"url": {
-					"raw": "localhost:9041/api/v1/user/3",
+					"raw": "localhost:9041/api/v1/user/1",
 					"host": [
 						"localhost"
 					],
@@ -98,7 +108,7 @@
 						"api",
 						"v1",
 						"user",
-						"3"
+						"1"
 					]
 				}
 			},
@@ -121,7 +131,7 @@
 					}
 				],
 				"url": {
-					"raw": "localhost:9041/api/v1/user/3",
+					"raw": "localhost:9041/api/v1/user/1",
 					"host": [
 						"localhost"
 					],
@@ -130,7 +140,7 @@
 						"api",
 						"v1",
 						"user",
-						"3"
+						"1"
 					]
 				}
 			},
@@ -521,7 +531,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"user\": 3\n}",
+					"raw": "",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -731,7 +741,7 @@
 					}
 				],
 				"url": {
-					"raw": "localhost:9041/api/v1/user/orders/3",
+					"raw": "localhost:9041/api/v1/user/orders/1",
 					"host": [
 						"localhost"
 					],
@@ -741,7 +751,7 @@
 						"v1",
 						"user",
 						"orders",
-						"3"
+						"1"
 					]
 				}
 			},
@@ -764,7 +774,7 @@
 					}
 				],
 				"url": {
-					"raw": "localhost:9041/api/v1/user/revenue/3",
+					"raw": "localhost:9041/api/v1/user/revenue/1",
 					"host": [
 						"localhost"
 					],
@@ -774,7 +784,7 @@
 						"v1",
 						"user",
 						"revenue",
-						"3"
+						"1"
 					]
 				}
 			},
@@ -893,7 +903,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"user\": null,\n    \"category\": 1,\n    \"product\": null,\n    \"discountCode\": \"BUY_N_DECREASE_PERCENT\",\n    \"discountClassName\": \"BuyNDecreasePercentDiscount\",\n    \"isActive\": true,\n    \"startAt\": null,\n    \"expireAt\": null,\n    \"parameters\": null\n}"
+					"raw": "{\n    \"user\": null,\n    \"category\": 1,\n    \"product\": null,\n    \"discountCode\": \"BUY_N_DECREASE_PERCENT\",\n    \"discountClassName\": \"BuyNDecreasePercentDiscount\",\n    \"isActive\": true,\n    \"startAt\": null,\n    \"expireAt\": null,\n    \"parameters\": {\"buy\": \"2\", \"products\": \"[]\", \"categories\": \"[1]\", \"discountPercent\": \"25\"}\n}"
 				},
 				"url": {
 					"raw": "localhost:9041/api/v1/discount",
@@ -928,7 +938,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"user\": null,\n    \"category\": 1,\n    \"product\": null,\n    \"discountCode\": \"BUY_N_DECREASE_PERCENT\",\n    \"discountClassName\": \"BuyNDecreasePercentDiscount\",\n    \"isActive\": true,\n    \"startAt\": null,\n    \"expireAt\": null,\n    \"parameters\": null\n}",
+					"raw": "{\n    \"user\": null,\n    \"category\": 1,\n    \"product\": null,\n    \"discountCode\": \"BUY_N_DECREASE_PERCENT\",\n    \"discountClassName\": \"BuyNDecreasePercentDiscount\",\n    \"isActive\": true,\n    \"startAt\": {\"date\": \"2021-09-25\", \"time\": {\"hour\":\"23\",\"minute\":\"0\"}},\n    \"expireAt\": {\"date\": \"2021-09-30\", \"time\": {\"hour\":\"23\",\"minute\":\"0\"}},\n    \"parameters\": {\"buy\": 2, \"discountPercent\": 25, \"categories\": \"[1]\", \"products\": \"[]\"}\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -968,7 +978,7 @@
 					}
 				],
 				"url": {
-					"raw": "localhost:9041/api/v1/order/discounts?order=6",
+					"raw": "localhost:9041/api/v1/order/discounts?order=1",
 					"host": [
 						"localhost"
 					],
@@ -982,7 +992,7 @@
 					"query": [
 						{
 							"key": "order",
-							"value": "6"
+							"value": "1"
 						}
 					]
 				}
