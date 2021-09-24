@@ -95,7 +95,7 @@ class ProductController extends AbstractController
 
         $isActive = null;
         if (array_key_exists('is_active', $query) && is_bool((bool)$query['is_active'])) {
-            $isActive = (bool)$query['is_active'];
+            $isActive = filter_var($query['is_active'], FILTER_VALIDATE_BOOLEAN);
         }
 
         $page = 1;
